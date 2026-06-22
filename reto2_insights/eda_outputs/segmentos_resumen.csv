@@ -1,0 +1,5 @@
+digital_nivel,riesgo_nivel,clientes,edad_prom,prob_default_prom,score_digital_prom,pct_whatsapp
+Digital alto,Riesgo alto,12425,44.98,0.75,75.17,0.8
+Digital alto,Riesgo bajo,12523,44.92,0.25,75.02,0.79
+Digital bajo,Riesgo alto,12424,45.1,0.75,24.24,0.79
+Digital bajo,Riesgo bajo,12628,44.96,0.25,24.7,0.79

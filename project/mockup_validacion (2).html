@@ -1,0 +1,522 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Mibanco · Validación de Comunicaciones (Mockup funcional)</title>
+<style>
+  :root{
+    --green:#009639; --green-d:#00712c; --green-l:#e8f6ed;
+    --yellow:#ffc40c; --yellow-l:#fff7da;
+    --gray:#9aa3ab; --gray-l:#eef1f3; --gray-d:#5b6670;
+    --ink:#1f2a30; --line:#dfe4e8; --bg:#f4f6f7; --white:#fff;
+    --red:#d64545; --blue:#2f6fb0;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif;color:var(--ink);background:var(--bg)}
+  header{background:var(--green);color:#fff;padding:14px 20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  header .logo{font-weight:800;font-size:20px;letter-spacing:.3px}
+  header .sub{opacity:.85;font-size:13px}
+  .spacer{flex:1}
+  .viewtoggle{display:flex;background:rgba(255,255,255,.15);border-radius:10px;padding:3px}
+  .viewtoggle button{border:0;background:transparent;color:#fff;padding:8px 14px;border-radius:8px;cursor:pointer;font-weight:600;font-size:13px}
+  .viewtoggle button.active{background:#fff;color:var(--green-d)}
+  .wrap{max-width:1180px;margin:0 auto;padding:20px}
+  .who{font-size:12px;color:var(--gray-d);margin:-4px 0 14px}
+  .grid{display:grid;grid-template-columns:330px 1fr;gap:18px}
+  @media(max-width:880px){.grid{grid-template-columns:1fr}}
+  .card{background:#fff;border:1px solid var(--line);border-radius:12px}
+  .card h3{margin:0;padding:12px 14px;border-bottom:1px solid var(--line);font-size:14px}
+  .req{padding:11px 14px;border-bottom:1px solid var(--line);cursor:pointer;display:flex;gap:10px;align-items:flex-start}
+  .req:hover{background:var(--gray-l)}
+  .req.sel{background:var(--green-l);border-left:4px solid var(--green);padding-left:10px}
+  .req .meta{flex:1}
+  .req .ttl{font-weight:600;font-size:14px}
+  .req .info{font-size:12px;color:var(--gray-d);margin-top:2px}
+  .pill{font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;display:inline-block;text-transform:uppercase;letter-spacing:.3px}
+  .pill.area{background:var(--gray-l);color:var(--gray-d)}
+  .pill.tipo{background:#e7eff7;color:var(--blue)}
+  .badge{font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;white-space:nowrap}
+  .b-proc{background:var(--gray-l);color:var(--gray-d)}
+  .b-obs{background:var(--yellow-l);color:#8a6d00}
+  .b-ok{background:var(--green-l);color:var(--green-d)}
+  .b-pub{background:#e7eff7;color:var(--blue)}
+
+  .detail{padding:18px}
+  .detail .head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:8px;flex-wrap:wrap}
+  .detail h2{margin:0;font-size:18px}
+  .detail .desc{color:var(--gray-d);font-size:13px;margin:4px 0 18px}
+
+  /* Flow */
+  .flow{display:flex;align-items:stretch;gap:0;overflow-x:auto;padding:6px 2px 14px}
+  .step{min-width:150px;flex:1;display:flex;flex-direction:column;align-items:center;text-align:center;position:relative}
+  .step .box{width:100%;border:2px solid var(--line);border-radius:12px;padding:14px 10px;cursor:pointer;background:#fff;transition:.15s;min-height:96px;display:flex;flex-direction:column;justify-content:center;gap:6px}
+  .step .box:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.08)}
+  .step.locked .box{cursor:not-allowed;opacity:.5}
+  .step.locked .box:hover{transform:none;box-shadow:none}
+  .step .num{width:26px;height:26px;border-radius:50%;background:var(--gray);color:#fff;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center;margin:0 auto}
+  .step .lbl{font-size:12px;font-weight:600;line-height:1.25}
+  .step .st{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.3px}
+  .arrow{display:flex;align-items:center;color:var(--gray);font-size:20px;padding:0 4px}
+  /* states */
+  .step.ok .box{border-color:var(--green);background:var(--green-l)}
+  .step.ok .num{background:var(--green)}
+  .step.ok .st{color:var(--green-d)}
+  .step.obs .box{border-color:var(--yellow);background:var(--yellow-l)}
+  .step.obs .num{background:var(--yellow);color:#5c4a00}
+  .step.obs .st{color:#8a6d00}
+  .step.proc .box{border-color:var(--blue);background:#eff5fb}
+  .step.proc .num{background:var(--blue)}
+  .step.proc .st{color:var(--blue)}
+  .step.wait .box{border-color:#b89bd8;background:#f3edfa}
+  .step.wait .num{background:#7e57c2}
+  .step.wait .st{color:#6a3fb0}
+
+  .hint{font-size:12px;color:var(--gray-d);text-align:center;margin-top:6px}
+
+  /* Modal */
+  .overlay{position:fixed;inset:0;background:rgba(20,28,33,.55);display:none;align-items:center;justify-content:center;padding:20px;z-index:50}
+  .overlay.on{display:flex}
+  .modal{background:#fff;border-radius:14px;max-width:760px;width:100%;max-height:88vh;overflow:auto}
+  .modal .mh{padding:16px 20px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}
+  .modal .mh h3{margin:0;font-size:16px}
+  .modal .mb{padding:20px}
+  .modal .mf{padding:14px 20px;border-top:1px solid var(--line);display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
+  .x{border:0;background:transparent;font-size:22px;cursor:pointer;color:var(--gray-d);line-height:1}
+  .btn{border:0;border-radius:9px;padding:10px 16px;font-weight:600;font-size:13px;cursor:pointer}
+  .btn.primary{background:var(--green);color:#fff}
+  .btn.primary:hover{background:var(--green-d)}
+  .btn.ghost{background:var(--gray-l);color:var(--ink)}
+  .btn.warn{background:var(--yellow);color:#5c4a00}
+  .btn:disabled{opacity:.45;cursor:not-allowed}
+
+  .kv{display:flex;gap:10px;font-size:13px;padding:6px 0;border-bottom:1px dashed var(--line)}
+  .kv b{min-width:130px;color:var(--gray-d);font-weight:600}
+  .note{background:var(--yellow-l);border:1px solid #f1dd95;border-radius:10px;padding:12px 14px;font-size:13px;margin:12px 0}
+  .note.ok{background:var(--green-l);border-color:#bfe3cd}
+  .note.bad{background:#fdeaea;border-color:#f3c2c2}
+  .compare{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:12px 0}
+  @media(max-width:640px){.compare{grid-template-columns:1fr}}
+  .compare .col{border:1px solid var(--line);border-radius:10px;padding:12px;font-size:13px;line-height:1.5}
+  .compare .col .tag{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;margin-bottom:6px;display:inline-block}
+  .col.old .tag{color:var(--red)} .col.old{background:#fdf3f3}
+  .col.new .tag{color:var(--green-d)} .col.new{background:var(--green-l)}
+  ul.chk{margin:8px 0;padding-left:18px;font-size:13px;line-height:1.6}
+  textarea{width:100%;border:1px solid var(--line);border-radius:9px;padding:10px;font:inherit;font-size:13px;min-height:90px}
+  .img-row{display:flex;gap:12px;flex-wrap:wrap;margin:10px 0}
+  .img-card{border:1px solid var(--line);border-radius:10px;padding:10px;width:200px}
+  .img-thumb{width:100%;height:90px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--gray-d);font-weight:600}
+  .img-card .res{font-size:11px;font-weight:700;margin-top:8px}
+  .img-card.ok .img-thumb{background:var(--green-l)} .img-card.ok .res{color:var(--green-d)}
+  .img-card.bad .img-thumb{background:#fdeaea} .img-card.bad .res{color:var(--red)}
+  .summary-line{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--line);font-size:13px}
+  .dot{width:20px;height:20px;border-radius:50%;color:#fff;font-size:11px;display:flex;align-items:center;justify-content:center;font-weight:700}
+  .dot.ok{background:var(--green)}
+  .role-tip{font-size:11px;background:#eef5fb;color:var(--blue);border:1px dashed #b9d4ec;border-radius:8px;padding:6px 10px;margin-bottom:10px;display:inline-block}
+  .empty{padding:60px 20px;text-align:center;color:var(--gray-d)}
+</style>
+</head>
+<body>
+<header>
+  <span class="logo">☀ mibanco</span>
+  <span class="sub">Validación de Comunicaciones · Mockup funcional</span>
+  <span class="spacer"></span>
+  <div class="viewtoggle">
+    <button id="vCX" class="active" onclick="setView('cx')">Vista CX (Experiencia)</button>
+    <button id="vSol" onclick="setView('sol')">Vista Solicitante</button>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="who" id="whoLabel"></div>
+  <div class="grid">
+    <div class="card">
+      <h3 id="listTitle">Solicitudes</h3>
+      <div id="reqList"></div>
+    </div>
+    <div class="card">
+      <div id="detail" class="detail"><div class="empty">Selecciona una solicitud de la izquierda.</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="overlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="mh"><h3 id="mTitle">Detalle</h3><button class="x" onclick="closeModal()">×</button></div>
+    <div class="mb" id="mBody"></div>
+    <div class="mf" id="mFoot"></div>
+  </div>
+</div>
+
+<script>
+// ---------- Estado / datos de ejemplo ----------
+const STEPS = [
+  {n:1, lbl:'Recepción de solicitud'},
+  {n:2, lbl:'Validación de redacción (IA)'},
+  {n:3, lbl:'Validación de marca / imágenes (IA)'},
+  {n:4, lbl:'Validación legal y cumplimiento'},
+  {n:5, lbl:'Brief + Aprobación CX'},
+];
+
+// status por paso: locked | proc | obs | ok | wait
+let view = 'cx';
+let selected = null;
+
+const requests = [
+  {
+    id:'SOL-001', titulo:'Campaña SMS pago oportuno', remitente:'María Quispe', fecha:'18/06/2026',
+    area:'Productos', tipo:'SMS',
+    contenido:'Estimado cliente apreciado, le informamos que en virtud de su condición crediticia actual usted dispone de la posibilidad de efectuar el abono correspondiente a su obligación financiera antes de la fecha límite estipulada para evitar penalidades.',
+    contenidoCorregido:'Hola {Nombre}, recuerda pagar tu cuota antes del 25/06 y evita recargos. Paga fácil en la app Mibanco. — Tu asesor: Luis Pérez',
+    feedback:{
+      fallos:['Lenguaje muy formal y largo (no es simple ni cercano).','Supera buenas prácticas de SMS (mensaje extenso).','No incluye personalización ni datos del asesor.','Call to action poco claro.'],
+      principios:['Lenguaje simple y cercano','Fácil de actuar (CTA claro)','Considerar datos del Asesor de Negocios']
+    },
+    imagenes:[], // SMS sin imágenes
+    steps:['ok','obs','locked','locked','locked'] // estado inicial
+  },
+  {
+    id:'SOL-002', titulo:'Email bienvenida crédito', remitente:'Jorge Ramos', fecha:'18/06/2026',
+    area:'Digital', tipo:'Email',
+    contenido:'Hola {Nombre}, ¡bienvenido a Mibanco! Tu crédito ya está activo. Cualquier consulta escríbenos.',
+    contenidoCorregido:'Hola {Nombre}, ¡bienvenido a Mibanco! Tu crédito ya está activo. Tu asesor {Asesor} te acompañará. Ingresa a la app para ver tu cronograma.',
+    feedback:{fallos:['Falta incluir datos del asesor de negocios.','Saludo correcto pero CTA mejorable.'],principios:['Saludo y personalización','Considerar datos del Asesor']},
+    imagenes:[
+      {nombre:'banner_bienvenida.png', ok:false, res:'Logo en color incorrecto (no es el verde Mibanco)', detalle:'El isotipo del sol debe ir en amarillo institucional sobre fondo verde. El banner usa un verde fuera de paleta.'},
+      {nombre:'icono_app.png', ok:true, res:'Cumple branding', detalle:'Proporciones y color correctos.'}
+    ],
+    steps:['ok','ok','obs','locked','locked']
+  },
+  {
+    id:'SOL-003', titulo:'WhatsApp recordatorio cuota', remitente:'Ana Torres', fecha:'17/06/2026',
+    area:'Negocios', tipo:'WhatsApp',
+    contenido:'Hola {Nombre} 👋 te recordamos que tu cuota vence el 25/06. Paga en la app Mibanco. Tu asesor: {Asesor}.',
+    contenidoCorregido:'',
+    feedback:{fallos:[],principios:[]},
+    imagenes:[{nombre:'sticker_recordatorio.png', ok:true, res:'Cumple branding', detalle:'OK'}],
+    legal:{ok:false, observaciones:['El mensaje no incluye el canal oficial de contacto.','Falta aclarar que el pago se realiza solo por canales Mibanco (riesgo de phishing).'], sugerencias:['Agregar: "Paga solo en la app oficial Mibanco o en agencias."']},
+    contenidoLegalCorregido:'Hola {Nombre} 👋 te recordamos que tu cuota vence el 25/06. Paga solo en la app oficial Mibanco o en agencias. Tu asesor: {Asesor}.',
+    steps:['ok','ok','ok','obs','locked'] // legal observado, requiere al solicitante
+  },
+  {
+    id:'SOL-004', titulo:'Push promo seguro', remitente:'Carla Díaz', fecha:'16/06/2026',
+    area:'Productos', tipo:'Push notification',
+    contenido:'Protege tu negocio con el Seguro Mibanco. Actívalo desde la app.',
+    contenidoCorregido:'',
+    feedback:{fallos:[],principios:[]},
+    imagenes:[],
+    steps:['ok','ok','ok','ok','wait'] // listo para aprobación CX
+  },
+  {
+    id:'SOL-005', titulo:'SMS confirmación desembolso', remitente:'Pedro Soto', fecha:'15/06/2026',
+    area:'Digital', tipo:'SMS',
+    contenido:'Hola {Nombre}, tu desembolso fue realizado. Revisa tu cuenta. — Mibanco Oficial',
+    contenidoCorregido:'',
+    feedback:{fallos:[],principios:[]},
+    imagenes:[],
+    steps:['ok','ok','ok','ok','ok'], // APROBADO
+    aprobado:true
+  }
+];
+
+// ---------- Helpers de estado global ----------
+function reqStatus(r){
+  if(r.aprobado) return {cls:'b-pub', txt: view==='sol' ? 'Aprobado · listo para publicar' : 'Aprobado'};
+  const last = r.steps.lastIndexOf('ok');
+  if(r.steps.includes('obs')) return {cls:'b-obs', txt:'Con observaciones'};
+  if(r.steps.includes('wait')) return {cls:'b-proc', txt: view==='sol' ? 'Esperando aprobación CX' : 'Pendiente de tu aprobación'};
+  return {cls:'b-proc', txt:'En proceso'};
+}
+
+function stepStateClass(s){return s;} // ya viene como clase
+
+// ---------- Render lista ----------
+function setView(v){
+  view=v;
+  document.getElementById('vCX').classList.toggle('active', v==='cx');
+  document.getElementById('vSol').classList.toggle('active', v==='sol');
+  document.getElementById('whoLabel').textContent = v==='cx'
+    ? '👀 Estás viendo TODAS las solicitudes de todas las áreas. El equipo CX interviene principalmente en el Paso 5 (aprobación final).'
+    : '✍ Estás viendo SOLO tus solicitudes. Atiendes observaciones en Paso 2 y 3, y publicas cuando CX aprueba.';
+  document.getElementById('listTitle').textContent = v==='cx' ? 'Solicitudes de todas las áreas' : 'Mis solicitudes (Área Productos)';
+  renderList();
+  if(selected) renderDetail(selected);
+}
+
+function visibleRequests(){
+  // En vista solicitante simulamos que el usuario es del área "Productos"
+  if(view==='sol') return requests.filter(r=>r.area==='Productos');
+  return requests;
+}
+
+function renderList(){
+  const el=document.getElementById('reqList');
+  const list=visibleRequests();
+  if(!list.length){el.innerHTML='<div class="empty">No hay solicitudes.</div>';return;}
+  el.innerHTML=list.map(r=>{
+    const st=reqStatus(r);
+    return `<div class="req ${selected&&selected.id===r.id?'sel':''}" onclick="select('${r.id}')">
+      <div class="meta">
+        <div class="ttl">${r.titulo}</div>
+        <div class="info">${r.id} · ${r.remitente} · ${r.fecha}</div>
+        <div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap">
+          <span class="pill area">${r.area}</span>
+          <span class="pill tipo">${r.tipo}</span>
+        </div>
+      </div>
+      <span class="badge ${st.cls}">${st.txt}</span>
+    </div>`;
+  }).join('');
+}
+
+function select(id){selected=requests.find(r=>r.id===id);renderList();renderDetail(selected);}
+
+// ---------- Render detalle + flujo ----------
+function renderDetail(r){
+  const el=document.getElementById('detail');
+  const flow=r.steps.map((s,i)=>{
+    const stp=STEPS[i];
+    const stText={ok:'Completado',obs:'Observado',proc:'En proceso',wait:'Esperando CX',locked:'Bloqueado'}[s];
+    const clickable = s!=='locked';
+    const arrow = i<4 ? '<div class="arrow">→</div>' : '';
+    return `<div class="step ${s}">
+        <div class="box" onclick="${clickable?`openStep('${r.id}',${stp.n})`:''}">
+          <div class="num">${stp.n}</div>
+          <div class="lbl">${stp.lbl}</div>
+          <div class="st">${stText}</div>
+        </div>
+      </div>${arrow}`;
+  }).join('');
+
+  el.innerHTML=`
+    <div class="head">
+      <div>
+        <h2>${r.titulo}</h2>
+        <div class="desc">${r.id} · ${r.tipo} · Área ${r.area}</div>
+      </div>
+      <span class="badge ${reqStatus(r).cls}">${reqStatus(r).txt}</span>
+    </div>
+    <div class="flow">${flow}</div>
+    <div class="hint">Haz clic en cada paso (cajita) para abrir su modal. Verde = OK · Amarillo = observado · Morado = espera CX · Gris = bloqueado.</div>
+  `;
+}
+
+// ---------- Modales por paso ----------
+function openModal(title, body, footer){
+  document.getElementById('mTitle').innerHTML=title;
+  document.getElementById('mBody').innerHTML=body;
+  document.getElementById('mFoot').innerHTML=footer||'';
+  document.getElementById('overlay').classList.add('on');
+}
+function closeModal(){document.getElementById('overlay').classList.remove('on');}
+
+function roleTip(t){return `<div class="role-tip">${t}</div>`;}
+
+function openStep(id, n){
+  const r=requests.find(x=>x.id===id);
+  if(n===1) return modalStep1(r);
+  if(n===2) return modalStep2(r);
+  if(n===3) return modalStep3(r);
+  if(n===4) return modalStep4(r);
+  if(n===5) return modalStep5(r);
+}
+
+// PASO 1 — Recepción
+function modalStep1(r){
+  openModal('Paso 1 · Recepción de solicitud',
+    `<div class="note ok">Solicitud recibida e interpretada automáticamente desde el correo. ✔</div>
+     <div class="kv"><b>N° solicitud</b><span>${r.id}</span></div>
+     <div class="kv"><b>Remitente</b><span>${r.remitente}</span></div>
+     <div class="kv"><b>Fecha</b><span>${r.fecha}</span></div>
+     <div class="kv"><b>Área solicitante</b><span>${r.area}</span></div>
+     <div class="kv"><b>Tipo de pieza</b><span>${r.tipo}</span></div>
+     <div class="kv"><b>Contenido recibido</b><span>${r.contenido}</span></div>`,
+    `<button class="btn ghost" onclick="closeModal()">Cerrar</button>`);
+}
+
+// PASO 2 — Redacción (IA)
+function modalStep2(r){
+  const isObs = r.steps[1]==='obs';
+  if(!isObs){
+    openModal('Paso 2 · Validación de redacción (IA)',
+      `<div class="note ok">El agente IA revisó tono, claridad, simplicidad y formato. No se encontraron observaciones. ✔</div>
+       <div class="compare"><div class="col new"><span class="tag">Mensaje aprobado</span>${r.contenidoCorregido||r.contenido}</div></div>`,
+      `<button class="btn ghost" onclick="closeModal()">Cerrar</button>`);
+    return;
+  }
+  const fb=r.feedback;
+  const tip = view==='sol'
+    ? roleTip('Como SOLICITANTE: revisa la propuesta del agente y decide. Puedes aceptar el cambio o escribir tu propia versión para re-validar.')
+    : roleTip('Vista CX: aquí solo monitoreas. La acción de aceptar/editar la realiza el área solicitante.');
+  const body=`
+    ${tip}
+    <div class="note bad"><b>El agente detectó observaciones en la redacción:</b>
+      <ul class="chk">${fb.fallos.map(f=>`<li>${f}</li>`).join('')}</ul>
+      <div style="font-size:12px;color:var(--gray-d)">Principios afectados: ${fb.principios.join(' · ')}</div>
+    </div>
+    <div class="compare">
+      <div class="col old"><span class="tag">Versión original</span>${r.contenido}</div>
+      <div class="col new"><span class="tag">Versión corregida por IA</span>${r.contenidoCorregido}</div>
+    </div>
+    <div id="ownEdit" style="display:none;margin-top:12px">
+      <label style="font-size:13px;font-weight:600">Escribe tu propia versión:</label>
+      <textarea id="ownText">${r.contenidoCorregido}</textarea>
+    </div>`;
+  let footer;
+  if(view==='sol'){
+    footer=`
+      <button class="btn ghost" onclick="toggleOwn()">Hacer mi propia versión</button>
+      <button class="btn warn" id="revalBtn" style="display:none" onclick="revalidate('${r.id}')">Re-validar con IA</button>
+      <button class="btn primary" onclick="acceptStep('${r.id}',2)">Aceptar cambio y continuar</button>`;
+  } else {
+    footer=`<button class="btn ghost" onclick="closeModal()">Cerrar</button>`;
+  }
+  openModal('Paso 2 · Validación de redacción (IA)', body, footer);
+}
+function toggleOwn(){
+  const e=document.getElementById('ownEdit');const b=document.getElementById('revalBtn');
+  const show=e.style.display==='none';e.style.display=show?'block':'none';b.style.display=show?'inline-block':'none';
+}
+function revalidate(id){
+  // Simulación: la IA re-valida y aprueba
+  alert('🔄 El agente IA re-validó tu versión: redacción correcta. Puedes continuar.');
+}
+function acceptStep(id,n){
+  const r=requests.find(x=>x.id===id);
+  r.steps[n-1]='ok';
+  if(n===4){ r.steps[4]='wait'; }            // tras legal -> paso 5 espera a CX
+  else if(r.steps[n]==='locked'){
+    r.steps[n]= (r.imagenes&&r.imagenes.some(i=>!i.ok))?'obs':'ok';
+  }
+  closeModal();renderList();renderDetail(r);
+}
+
+// PASO 3 — Marca / imágenes (IA)
+function modalStep3(r){
+  const isObs=r.steps[2]==='obs';
+  const tip = view==='sol'
+    ? roleTip('Como SOLICITANTE: revisa cada imagen. Si hay observaciones, sube una nueva versión y el agente la validará.')
+    : roleTip('Vista CX: monitoreo. El reemplazo de imágenes lo hace el área solicitante.');
+  if(!r.imagenes.length){
+    openModal('Paso 3 · Validación de marca / imágenes (IA)',
+      `<div class="note ok">Esta pieza (${r.tipo}) no tiene imágenes adjuntas. Validación de marca no aplica. ✔</div>`,
+      `<button class="btn primary" onclick="acceptStep('${r.id}',3)">Continuar</button>`);
+    return;
+  }
+  const cards=r.imagenes.map(im=>`
+    <div class="img-card ${im.ok?'ok':'bad'}">
+      <div class="img-thumb">🖼 ${im.nombre}</div>
+      <div class="res">${im.ok?'✔':'✖'} ${im.res}</div>
+      <div style="font-size:11px;color:var(--gray-d);margin-top:4px">${im.detalle}</div>
+      ${(!im.ok && view==='sol')?`<button class="btn warn" style="margin-top:8px;width:100%" onclick="reupload('${r.id}','${im.nombre}')">Subir nueva imagen</button>`:''}
+    </div>`).join('');
+  const allOk=r.imagenes.every(i=>i.ok);
+  openModal('Paso 3 · Validación de marca / imágenes (IA)',
+    `${tip}
+     <div class="note ${allOk?'ok':''}">El agente comparó cada imagen contra las <b>referencias de branding</b> (logo, colores institucionales, proporciones).</div>
+     <div class="img-row">${cards}</div>`,
+    view==='sol'
+      ? `<button class="btn primary" ${allOk?'':'disabled'} onclick="acceptStep('${r.id}',3)">${allOk?'Todo validado · continuar':'Corrige las imágenes observadas'}</button>`
+      : `<button class="btn ghost" onclick="closeModal()">Cerrar</button>`);
+}
+function reupload(id,nombre){
+  const r=requests.find(x=>x.id===id);
+  const im=r.imagenes.find(i=>i.nombre===nombre);
+  im.ok=true;im.res='Cumple branding (nueva versión)';im.detalle='El agente validó la nueva imagen: colores y logo correctos.';
+  alert('📤 Nueva imagen cargada y validada por el agente IA ✔');
+  modalStep3(r);
+}
+
+// PASO 4 — Legal y cumplimiento (participa el solicitante)
+function modalStep4(r){
+  const isObs = r.steps[3]==='obs';
+  if(!isObs){
+    openModal('Paso 4 · Validación legal y cumplimiento',
+      `<div class="note ok">Revisión de normativa, riesgos y cumplimiento completada. Sin observaciones. ✔</div>
+       <ul class="chk"><li>Sin datos sensibles expuestos</li><li>No promete más de lo permitido / no parece fraude</li><li>Cumple normativa aplicable</li></ul>`,
+      `<button class="btn ghost" onclick="closeModal()">Cerrar</button>`);
+    return;
+  }
+  const lg=r.legal;
+  const tip = view==='sol'
+    ? roleTip('Como SOLICITANTE: revisa las observaciones legales. Acepta el ajuste sugerido o escribe tu propia versión para re-validar con Legal/Cumplimiento.')
+    : roleTip('Vista CX: monitoreo. El ajuste por temas legales lo realiza el área solicitante.');
+  const body=`
+    ${tip}
+    <div class="note bad"><b>Legal y Cumplimiento detectó observaciones:</b>
+      <ul class="chk">${lg.observaciones.map(o=>`<li>${o}</li>`).join('')}</ul>
+      <div style="font-size:12px;color:var(--gray-d)">Sugerencias: ${lg.sugerencias.join(' · ')}</div>
+    </div>
+    <div class="compare">
+      <div class="col old"><span class="tag">Versión actual</span>${r.contenidoCorregido||r.contenido}</div>
+      <div class="col new"><span class="tag">Versión ajustada (legal)</span>${r.contenidoLegalCorregido}</div>
+    </div>
+    <div id="ownEdit4" style="display:none;margin-top:12px">
+      <label style="font-size:13px;font-weight:600">Escribe tu propia versión:</label>
+      <textarea id="ownText4">${r.contenidoLegalCorregido}</textarea>
+    </div>`;
+  let footer;
+  if(view==='sol'){
+    footer=`
+      <button class="btn ghost" onclick="toggleOwn4()">Hacer mi propia versión</button>
+      <button class="btn warn" id="revalBtn4" style="display:none" onclick="revalidate4('${r.id}')">Re-validar con Legal</button>
+      <button class="btn primary" onclick="acceptStep('${r.id}',4)">Aceptar ajuste y continuar</button>`;
+  } else {
+    footer=`<button class="btn ghost" onclick="closeModal()">Cerrar</button>`;
+  }
+  openModal('Paso 4 · Validación legal y cumplimiento', body, footer);
+}
+function toggleOwn4(){
+  const e=document.getElementById('ownEdit4');const b=document.getElementById('revalBtn4');
+  const show=e.style.display==='none';e.style.display=show?'block':'none';b.style.display=show?'inline-block':'none';
+}
+function revalidate4(id){alert('🔄 Legal/Cumplimiento re-validó tu versión: conforme. Puedes continuar.');}
+
+// PASO 5 — Brief + Aprobación CX
+function modalStep5(r){
+  const lines=STEPS.map((s,i)=>`<div class="summary-line"><span class="dot ok">✓</span><b style="min-width:230px">${s.lbl}</b><span>OK</span></div>`).join('');
+  const brief=`
+    <div class="note ok"><b>Brief generado automáticamente</b> · resumen de todos los pasos.</div>
+    <div class="kv"><b>Pieza</b><span>${r.tipo} — ${r.titulo}</span></div>
+    <div class="kv"><b>Área</b><span>${r.area}</span></div>
+    <div class="kv"><b>Versión final</b><span>${r.contenidoCorregido||r.contenido}</span></div>
+    <div style="margin-top:12px">${lines}</div>`;
+
+  if(view==='cx'){
+    if(r.aprobado){
+      openModal('Paso 5 · Brief + Aprobación CX', brief+`<div class="note ok">✔ Solicitud aprobada por CX.</div>`,
+        `<button class="btn ghost" onclick="closeModal()">Cerrar</button>`);
+    } else {
+      openModal('Paso 5 · Brief + Aprobación CX',
+        roleTip('Vista CX: aquí es donde realmente intervienes. Revisa el brief y da el visto bueno final.')+brief,
+        `<button class="btn ghost" onclick="closeModal()">Cerrar</button>
+         <button class="btn primary" onclick="approveCX('${r.id}')">Aprobar solicitud</button>`);
+    }
+  } else {
+    // Vista solicitante
+    if(r.aprobado){
+      openModal('Paso 5 · Aprobado · Publicar', brief+`<div class="note ok">✔ CX aprobó tu solicitud. Ya puedes publicarla.</div>`,
+        `<button class="btn ghost" onclick="closeModal()">Cerrar</button>
+         <button class="btn primary" onclick="publish('${r.id}')">Publicar comunicación</button>`);
+    } else {
+      openModal('Paso 5 · Esperando aprobación CX', brief+`<div class="note">⏳ Tu solicitud está completa y a la espera de la aprobación del equipo CX.</div>`,
+        `<button class="btn ghost" onclick="closeModal()">Cerrar</button>`);
+    }
+  }
+}
+function approveCX(id){
+  const r=requests.find(x=>x.id===id);
+  r.aprobado=true;r.steps[4]='ok';
+  alert('✔ Solicitud aprobada. Ahora el área solicitante puede publicarla.');
+  closeModal();renderList();renderDetail(r);
+}
+function publish(id){
+  alert('🚀 Comunicación publicada / enviada al cliente.');
+  closeModal();
+}
+
+// init
+setView('cx');
+</script>
+</body>
+</html>

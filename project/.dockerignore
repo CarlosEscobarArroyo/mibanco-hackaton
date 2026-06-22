@@ -1,0 +1,11 @@
+**/node_modules
+**/dist
+**/__pycache__
+**/*.pyc
+**/uploads
+**/.venv
+**/venv
+.git
+*.md
+mockup_*.html
+prompt_*.md

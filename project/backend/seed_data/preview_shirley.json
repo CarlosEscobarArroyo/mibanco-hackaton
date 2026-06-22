@@ -1,0 +1,25 @@
+{
+  "kind": "email",
+  "asunto": "Test: SHIRLEY 💳📲 Ingresa a la App Mibanco solo con tu tarjeta de débito",
+  "remitenteNombre": "MiBanco",
+  "remitenteEmail": "comunicaciones@mibanco.com.pe",
+  "para": "Caroll Alexia Llanos Osores <caroll.llanos.o@mibanco.com.pe>",
+  "fecha": "28 abr 2026, 16:14",
+  "saludo": "Hola, SHIRLEY",
+  "cuerpo": "Hola, SHIRLEY\n\nAhora puedes registrarte y usar tu App Mibanco solo con tu tarjeta de débito. Acércate a la agencia Mibanco y solicítala para disfrutar de los beneficios de la app.\n\nDescubre lo que puedes hacer en la App Mibanco:\n\nTransfiere GRATIS todos los días de 6 a.m a 12 a.m.\n\nDesembolsa tu línea de crédito en minutos*.\n\nPaga tus préstamos sin comisiones.\n\nAbre tu cuenta de ahorro y alcanza tus metas.\n\nRealiza tus recargas y pagos de servicios en pocos pasos.\n(*) Aplica solo para clientes que cuenten con disposición del producto. Línea de crédito Efectivo Altoque en la App Mibanco.\n\nObtén tu tarjeta de débito, regístrate en minutos y comienza a disfrutar de todo lo que la App Mibanco te permite hacer hoy.",
+  "bannerUrlCdn": "https://files.embluemail.com/images/27127/banner_tarjeta_debito_1777302025.png",
+  "bannerUrl": "https://files.embluemail.com/images/27127/banner_tarjeta_debito_1777302025.png",
+  "imagenesCdn": [
+    "https://files.embluemail.com/images/27127/banner_tarjeta_debito_1777302025.png",
+    "https://files.embluemail.com/images/27127/header_600.jpg",
+    "https://files.embluemail.com/images/27127/footer_actualizado_2025_1759858152.png",
+    "https://files.embluemail.com/images/27127/compromoso_2.png",
+    "https://files.embluemail.com/images/27127/pasos_tarjetas_vencidas_1.gif",
+    "https://files.embluemail.com/images/27127/icon_arrows.png",
+    "https://files.embluemail.com/images/27127/frame_15884__2__1776703386.png",
+    "https://files.embluemail.com/images/27127/frame__1___1__1776703400.png",
+    "https://files.embluemail.com/images/27127/icon_pig_coin.png",
+    "https://files.embluemail.com/images/27127/frame__1__1776703438.png",
+    "https://i.embluejet.com/ImagenesMoxie/emblue/images/logo.jpg"
+  ]
+}

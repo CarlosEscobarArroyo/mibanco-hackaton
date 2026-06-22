@@ -1,0 +1,17 @@
+# Sube solo lo necesario a Cloud Build
+.git
+**/node_modules
+**/dist
+**/.backup_pre_rediseno
+**/__pycache__
+**/*.pyc
+**/uploads
+**/.venv
+**/venv
+mockup_*.html
+prompt_*.md
+.venv_test
+test_smoke.py
+.venv_msg
+test_import.py
+inspect_msg.py

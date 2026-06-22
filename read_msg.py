@@ -1,0 +1,116 @@
+import re
+import sys
+import webbrowser
+from email.utils import parseaddr
+from pathlib import Path
+
+import extract_msg
+
+ruta = sys.argv[1] if len(sys.argv) > 1 else "Test  FIO  Seguimos mejorando tu experiencia digital .msg"
+
+msg = extract_msg.Message(ruta)
+
+# --- Datos del correo ---
+asunto = msg.subject or "(sin asunto)"
+nombre_rem, correo_rem = parseaddr(msg.sender or "")
+nombre_rem = nombre_rem or correo_rem or "Remitente"
+para = msg.to or ""
+
+MESES = ["ene", "feb", "mar", "abr", "may", "jun",
+         "jul", "ago", "sep", "oct", "nov", "dic"]
+if msg.date:
+    d = msg.date
+    fecha = f"{d.day} {MESES[d.month - 1]} {d.year}, {d.hour:02d}:{d.minute:02d}"
+else:
+    fecha = ""
+
+inicial = (nombre_rem.strip()[:1] or "?").upper()
+
+# --- Cuerpo del correo (HTML) en archivo aparte para aislarlo en un iframe ---
+html = msg.htmlBody
+if isinstance(html, bytes):
+    html = html.decode("utf-8", errors="replace")
+if not html:
+    html = f"<pre>{msg.body or ''}</pre>"
+
+stem = re.sub(r"\s+", "_", Path(ruta).stem).strip("_")
+body_file = Path(f"{stem}_body.html")
+body_file.write_text(html, encoding="utf-8")
+
+# --- Resumen en consola ---
+print(f"Asunto: {asunto}")
+print(f"De: {nombre_rem} <{correo_rem}>")
+print(f"Para: {para}")
+print(f"Fecha: {fecha}")
+
+# --- Maqueta estilo Gmail ---
+gmail = f"""<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>{asunto}</title>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  * {{ box-sizing: border-box; }}
+  body {{ margin:0; background:#f6f8fc; font-family:'Roboto',Arial,sans-serif; color:#202124; }}
+  .gmail {{ max-width:900px; margin:24px auto; background:#fff; border-radius:16px;
+            box-shadow:0 1px 3px rgba(60,64,67,.15); overflow:hidden; }}
+  .toolbar {{ display:flex; align-items:center; gap:22px; padding:10px 20px;
+              border-bottom:1px solid #f1f3f4; color:#5f6368; }}
+  .toolbar svg {{ width:20px; height:20px; fill:#5f6368; }}
+  .toolbar .sep {{ flex:1; }}
+  .head {{ padding:18px 24px 6px; }}
+  .subject {{ font-size:22px; font-weight:400; color:#202124; margin:0 0 14px;
+              display:flex; align-items:center; gap:10px; }}
+  .label {{ font-size:11px; background:#e8f0fe; color:#1967d2; padding:2px 8px;
+            border-radius:4px; font-weight:500; }}
+  .sender-row {{ display:flex; align-items:flex-start; padding:4px 24px 18px; gap:14px; }}
+  .avatar {{ width:40px; height:40px; border-radius:50%; background:#0b8457; color:#fff;
+             display:flex; align-items:center; justify-content:center;
+             font-size:18px; font-weight:500; flex-shrink:0; }}
+  .meta {{ flex:1; line-height:1.4; }}
+  .meta .name {{ font-weight:700; font-size:14px; }}
+  .meta .email {{ color:#5f6368; font-size:13px; }}
+  .meta .to {{ color:#5f6368; font-size:12px; margin-top:2px; }}
+  .right {{ text-align:right; color:#5f6368; font-size:12px; white-space:nowrap; }}
+  .right .star {{ font-size:18px; color:#dadce0; margin-top:4px; display:block; }}
+  .body-frame {{ width:100%; border:0; display:block; }}
+</style>
+</head>
+<body>
+  <div class="gmail">
+    <div class="toolbar">
+      <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20z"/></svg>
+      <svg viewBox="0 0 24 24"><path d="M20.54 5.23l-1.39-1.68C18.88 3.21 18.47 3 18 3H6c-.47 0-.88.21-1.16.55L3.46 5.23C3.17 5.57 3 6.02 3 6.5V19c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6.5c0-.48-.17-.93-.46-1.27zM12 17.5L6.5 12H10v-2h4v2h3.5L12 17.5zM5.12 5l.81-1h12l.94 1H5.12z"/></svg>
+      <svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+      <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+      <span class="sep"></span>
+      <span style="font-size:12px;">{fecha}</span>
+    </div>
+
+    <div class="head">
+      <h1 class="subject">{asunto} <span class="label">Recibidos</span></h1>
+    </div>
+
+    <div class="sender-row">
+      <div class="avatar">{inicial}</div>
+      <div class="meta">
+        <div><span class="name">{nombre_rem}</span> <span class="email">&lt;{correo_rem}&gt;</span></div>
+        <div class="to">para {para} &#9662;</div>
+      </div>
+      <div class="right">
+        {fecha}
+        <span class="star">&#9734;</span>
+      </div>
+    </div>
+
+    <iframe class="body-frame" src="{body_file.name}" onload="this.style.height=(this.contentWindow.document.body.scrollHeight+40)+'px';"></iframe>
+  </div>
+</body>
+</html>
+"""
+
+salida = Path(f"{stem}_gmail.html")
+salida.write_text(gmail, encoding="utf-8")
+print(f"\nVista Gmail guardada en: {salida.resolve()}")
+webbrowser.open(salida.resolve().as_uri())

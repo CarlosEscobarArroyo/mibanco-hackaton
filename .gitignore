@@ -1,0 +1,21 @@
+# --- Python ---
+.venv/
+**/.venv/
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*.egg-info/
+.python-version
+
+# --- Node / frontend ---
+node_modules/
+**/node_modules/
+
+# --- Editor / OS ---
+.Rhistory
+.DS_Store
+.idea/
+.vscode/
+
+# --- Logs ---
+*.log
