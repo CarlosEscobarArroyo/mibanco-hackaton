@@ -28,6 +28,33 @@ function Sol({ cls = 'sol', label }) {
   )
 }
 
+// Isotipo "mi banquito": un pan tostado humeante (quemado).
+function PanQuemado({ cls = 'pan', label }) {
+  const a11y = label ? { role: 'img', 'aria-label': label } : { 'aria-hidden': 'true' }
+  return (
+    <svg className={cls} viewBox="0 0 48 48" {...a11y}>
+      {/* humo */}
+      <g fill="none" stroke="#9AA0A6" strokeWidth="2" strokeLinecap="round" opacity=".55">
+        <path d="M16 17c-3-2 2-4-1-7" />
+        <path d="M24 16c-3-2 2-4-1-7" />
+        <path d="M32 17c-3-2 2-4-1-7" />
+      </g>
+      {/* cuerpo del pan */}
+      <path d="M8 34c0-9 7-16 16-16s16 7 16 16c0 2-1 3-3 3H11c-2 0-3-1-3-3z" fill="#B5772B" />
+      {/* corteza inferior */}
+      <path d="M8.2 31C8 32 8 33 8 34c0 2 1 3 3 3h26c2 0 3-1 3-3 0-1 0-2-.2-3H8.2z" fill="#7A4A18" />
+      {/* zonas quemadas */}
+      <g fill="#2E1A0B">
+        <ellipse cx="18" cy="24" rx="4.5" ry="3.2" />
+        <ellipse cx="29.5" cy="26" rx="5" ry="3.6" />
+        <ellipse cx="24" cy="21" rx="3" ry="2.2" />
+        <circle cx="34" cy="29" r="2.2" />
+        <circle cx="12.5" cy="30" r="2" />
+      </g>
+    </svg>
+  )
+}
+
 function estadoBadge(r, vista) {
   if (r.publicado) return { cls: 'b-pub', txt: 'Publicado 🚀' }
   if (r.aprobadoCX) return { cls: 'b-pub', txt: vista === 'sol' ? 'Aprobado · listo para publicar' : 'Aprobado' }
@@ -131,7 +158,7 @@ export default function App() {
   return (
     <>
       <header>
-        <span className="logo"><Sol cls="sol" label="Mibanco" /><b>mibanco</b></span>
+        <span className="logo"><PanQuemado cls="pan" label="mi banquito" /><b>mi banquito</b></span>
         <span className="sub">Validación de Comunicaciones · IA Multiagente</span>
         <span className="spacer"></span>
         {cfg && <span className="envtag"><span className="live"></span>🧠 {cfg.modelo?.model} · {cfg.storage?.backend}</span>}
