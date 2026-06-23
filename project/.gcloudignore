@@ -10,6 +10,8 @@
 **/venv
 mockup_*.html
 prompt_*.md
+deploy.sh
+*.md
 .venv_test
 test_smoke.py
 .venv_msg

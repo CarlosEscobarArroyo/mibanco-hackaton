@@ -25,11 +25,11 @@ Dos vistas: **CX** (ve todas, aprueba en paso 5) y **Solicitante** (ve las suyas
 
 | Variable | Descripción | Ejemplo |
 |---|---|---|
-| `GOOGLE_CLOUD_PROJECT` | Proyecto GCP | `glamour-peru-dw` |
+| `GOOGLE_CLOUD_PROJECT` | Proyecto GCP | `mibanco-hackaton` |
 | `GOOGLE_CLOUD_LOCATION` | Región de Vertex AI | `us-central1` |
 | `GEMINI_MODEL` | Modelo Gemini multimodal | `gemini-2.5-flash` |
 | `STORAGE_BACKEND` | `gcs` o `local` | `gcs` |
-| `GCS_BUCKET` | Bucket de imágenes (si `gcs`) | `glamour-peru-dw-mibanco-uploads` |
+| `GCS_BUCKET` | Bucket de imágenes (si `gcs`) | `mibanco-hackaton-mibanco-uploads` |
 | `STATIC_DIR` | Carpeta de estáticos (auto en Docker) | `/app/static` |
 | `PORT` | Puerto (lo fija Cloud Run) | `8080` |
 
@@ -40,7 +40,7 @@ Backend (terminal 1):
 cd backend
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-export GOOGLE_CLOUD_PROJECT=glamour-peru-dw
+export GOOGLE_CLOUD_PROJECT=mibanco-hackaton
 export GOOGLE_CLOUD_LOCATION=us-central1
 export GEMINI_MODEL=gemini-2.5-flash
 export STORAGE_BACKEND=local
@@ -57,20 +57,26 @@ npm run dev   # http://localhost:5173 (proxy /api -> :8080)
 
 ## Deploy a Cloud Run (una sola imagen, vía Cloud Build)
 
+> **Forma fácil (recomendada):** corre `bash deploy.sh` (o pídeselo a Claude Code).
+> Tiene todo preconfigurado. Ver **`DEPLOY.md`** para la guía paso a paso del equipo.
+> `bash deploy.sh reset` reinicia la demo al estado inicial.
+
+El comando equivalente, por si quieres verlo a detalle:
+
 ```bash
 gcloud run deploy mibanco-validacion \
   --source . \
-  --project glamour-peru-dw \
+  --project mibanco-hackaton \
   --region us-central1 \
   --allow-unauthenticated \
   --min-instances=1 --max-instances=1 \
   --memory 1Gi --cpu 1 --timeout 300 \
-  --service-account aurora-agent-app@glamour-peru-dw.iam.gserviceaccount.com \
-  --set-env-vars GOOGLE_CLOUD_PROJECT=glamour-peru-dw,GOOGLE_CLOUD_LOCATION=us-central1,GEMINI_MODEL=gemini-2.5-flash,STORAGE_BACKEND=gcs,GCS_BUCKET=glamour-peru-dw-mibanco-uploads
+  --service-account mibanco-app@mibanco-hackaton.iam.gserviceaccount.com \
+  --set-env-vars GOOGLE_CLOUD_PROJECT=mibanco-hackaton,GOOGLE_CLOUD_LOCATION=us-central1,GEMINI_MODEL=gemini-2.5-flash,STORAGE_BACKEND=gcs,GCS_BUCKET=mibanco-hackaton-mibanco-uploads
 ```
 
 > `--min-instances=1 --max-instances=1` garantiza una única instancia (el estado vive en RAM).
-> El service account `aurora-agent-app@` tiene `roles/aiplatform.user` (Vertex AI) y `roles/storage.objectAdmin` sobre el bucket.
+> El service account `mibanco-app@` tiene `roles/aiplatform.user` (Vertex AI) y `roles/storage.objectAdmin` sobre el bucket.
 
 ## Endpoints
 

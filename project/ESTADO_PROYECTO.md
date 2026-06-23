@@ -1,8 +1,21 @@
 # Estado del proyecto — Mibanco · Validación de Comunicaciones (MVP)
 
 > Documento de **handoff** para continuar en otra sesión. Última actualización: 2026-06-22.
-> Todo el proyecto se construyó y desplegó usando **exclusivamente** la cuenta
-> `carlos.escobar.arroyo@gmail.com` y el proyecto GCP `glamour-peru-dw`. **No usar otra cuenta.**
+>
+> 🔒 **Proyecto OBLIGATORIO — nunca otro:** **`mibanco-hackaton`** (número `902536648823`).
+> La app **SIEMPRE** se despliega ahí. Si gcloud está en otro proyecto (p. ej. uno **corporativo**),
+> hay que cambiarlo antes de cualquier comando. `deploy.sh` lo fuerza automáticamente y aborta si no
+> lo logra. **Bajo ninguna circunstancia se usa otro proyecto.**
+>
+> 👤 **Cuenta:** el dueño/owner es `carlos.escobar.arroyo@gmail.com`. Cada miembro del equipo despliega
+> con **su propia cuenta**, a la que el dueño le concede permisos en el proyecto (ver `DEPLOY.md` →
+> *Permisos*). El deploy NO fuerza una cuenta fija: usa la que esté activa.
+>
+> **Estado:** APIs habilitadas, service account `mibanco-app@` creada, bucket creado y
+> **deploy en vivo** (revisión `mibanco-validacion-00002-qnf`). **Pendientes (los hace el
+> usuario):** (1) `gcloud auth application-default login` para el ADC local, y (2) conceder
+> `roles/aiplatform.user` a la SA — el clasificador de seguridad bloquea ese grant a nivel
+> proyecto. Hasta el grant, los agentes Gemini en vivo darán 403. Ver §2 y §8.
 
 ---
 
@@ -10,12 +23,13 @@
 
 App full-stack (un solo servicio en Cloud Run) que automatiza la validación de comunicaciones
 de Mibanco con **5 agentes de IA (Gemini en Vertex AI)**. Flujo de 5 pasos + 2 vistas (CX y
-Solicitante). **Está terminada, desplegada y verificada end-to-end en producción** (incluida la UI
-por navegador headless).
+Solicitante). El código está **terminado y verificado end-to-end** y **desplegado en `mibanco-hackaton`**
+(salud `ok`, frontend HTTP 200, seed de 6 cargado).
 
-- **App en vivo:** https://mibanco-validacion-660529019743.us-central1.run.app
-  (URL alterna equivalente: https://mibanco-validacion-od2g645wkq-uc.a.run.app)
-- **Estado actual:** revisión `mibanco-validacion-00010-hv2`, seed de 6 solicitudes (incluye un correo
+- **App en vivo:** https://mibanco-validacion-902536648823.us-central1.run.app
+- **Estado actual:** revisión `mibanco-validacion-00002-qnf`;
+  los agentes Gemini en vivo requieren el grant `roles/aiplatform.user` pendiente (§2).
+  Seed de 6 solicitudes (incluye un correo
   `.msg` ya importado, SOL-006). Incluye el **rediseño visual completo** (§12) y la **visualización
   interactiva del `.msg` a lo largo de todo el flujo** con antes/después realista de dos columnas (§13).
 - **Repo local:** `/Users/carlosescobar/Projects/hackaton_mibanco/project` (NO es git aún).
@@ -24,27 +38,35 @@ por navegador headless).
 
 ## 2. Configuración GCP (CRÍTICO — memorizar)
 
+> 🔒 **Regla inquebrantable:** todo (deploy, builds, scripts) corre en el proyecto **`mibanco-hackaton`**.
+> Si gcloud está en otro proyecto (p. ej. uno corporativo), cámbialo con `gcloud config set project
+> mibanco-hackaton` antes de actuar — o usa `deploy.sh`, que lo fuerza solo. **Nunca desplegar en otro
+> proyecto.** La **cuenta** es la de cada quien (con permisos en el proyecto); el script usa la activa.
+
 | Dato | Valor |
 |---|---|
-| Cuenta (única) | `carlos.escobar.arroyo@gmail.com` (es **owner** del proyecto) |
-| Proyecto | `glamour-peru-dw` (número `660529019743`) |
+| Dueño / owner | `carlos.escobar.arroyo@gmail.com` |
+| Cuentas del equipo | cada miembro usa **su propia** cuenta, con permisos en el proyecto (ver `DEPLOY.md` → Permisos) |
+| Proyecto | `mibanco-hackaton` (número `902536648823`) |
 | Región | `us-central1` |
 | Modelo Gemini | `gemini-2.5-flash` (multimodal: texto + imágenes) |
 | Servicio Cloud Run | `mibanco-validacion` |
-| Service account runtime | `aurora-agent-app@glamour-peru-dw.iam.gserviceaccount.com` |
-| Bucket de imágenes (GCS) | `glamour-peru-dw-mibanco-uploads` (us-central1, uniform access) |
+| Service account runtime | `mibanco-app@mibanco-hackaton.iam.gserviceaccount.com` (creada; falta `roles/aiplatform.user`) |
+| Bucket de imágenes (GCS) | `mibanco-hackaton-mibanco-uploads` (us-central1, uniform access; creado + objectAdmin a la SA) |
 | Escalado | `--min-instances=1 --max-instances=1` (estado en RAM → 1 sola instancia) |
 | Acceso | público (`--allow-unauthenticated`) |
 
-### Identidad / permisos (cómo quedó resuelto)
-- El runtime corre como **`aurora-agent-app@`** porque ya tenía `roles/aiplatform.user` (Vertex AI).
-- A esa SA se le concedió `roles/storage.objectAdmin` **solo sobre el bucket** (binding a nivel
-  bucket, least-privilege). **No se hicieron cambios de IAM a nivel proyecto.**
-- ⚠️ Importante: el clasificador de seguridad de Claude Code **bloquea** los grants de IAM a nivel
-  proyecto (p.ej. `add-iam-policy-binding ... --role=roles/aiplatform.user`). Por eso se usó esta
-  ruta. Si en el futuro se necesita otra SA con Vertex, preferir la SA `aurora-agent-app@` o
-  bindings a nivel recurso.
-- APIs ya habilitadas: aiplatform, run, cloudbuild, artifactregistry, storage.
+### Identidad / permisos (estado en `mibanco-hackaton`)
+- SA **`mibanco-app@`** creada. ⚠️ **Falta** concederle `roles/aiplatform.user` (Vertex AI):
+  el clasificador de seguridad de Claude Code **bloquea** ese grant a nivel proyecto, así que
+  ejecútalo tú:
+  ```bash
+  gcloud projects add-iam-policy-binding mibanco-hackaton \
+    --member="serviceAccount:mibanco-app@mibanco-hackaton.iam.gserviceaccount.com" \
+    --role="roles/aiplatform.user" --condition=None
+  ```
+- A la SA ya se le concedió `roles/storage.objectAdmin` **solo sobre el bucket** (least-privilege).
+- APIs **habilitadas**: aiplatform, run, cloudbuild, artifactregistry, storage, iam.
 
 ---
 
@@ -163,18 +185,47 @@ La Vista Solicitante simula el **Área Productos** → muestra SOL-001 y SOL-004
 
 ## 8. Deploy y operación
 
+### Aprovisionar `mibanco-hackaton` (referencia — ya ejecutado; repetir solo en un proyecto nuevo desde cero)
+```bash
+gcloud config set account carlos.escobar.arroyo@gmail.com
+gcloud config set project  mibanco-hackaton
+
+# 1) ADC para el código local (Vertex AI) — abre navegador, loguea la cuenta gmail
+gcloud auth application-default login
+gcloud auth application-default set-quota-project mibanco-hackaton
+
+# 2) Habilitar APIs
+gcloud services enable aiplatform.googleapis.com run.googleapis.com \
+  cloudbuild.googleapis.com artifactregistry.googleapis.com storage.googleapis.com
+
+# 3) Service account de runtime + permisos
+gcloud iam service-accounts create mibanco-app --display-name "Mibanco Validacion runtime"
+gcloud projects add-iam-policy-binding mibanco-hackaton \
+  --member="serviceAccount:mibanco-app@mibanco-hackaton.iam.gserviceaccount.com" \
+  --role="roles/aiplatform.user"
+
+# 4) Bucket de imágenes + objectAdmin a nivel bucket (least-privilege)
+gcloud storage buckets create gs://mibanco-hackaton-mibanco-uploads \
+  --location=us-central1 --uniform-bucket-level-access
+gcloud storage buckets add-iam-policy-binding gs://mibanco-hackaton-mibanco-uploads \
+  --member="serviceAccount:mibanco-app@mibanco-hackaton.iam.gserviceaccount.com" \
+  --role="roles/storage.objectAdmin"
+```
+> El grant `roles/aiplatform.user` a nivel proyecto puede ser bloqueado por el clasificador de
+> seguridad de Claude Code; si pasa, ejecútalo tú en consola/CLI.
+
 ### Redesplegar (tras cualquier cambio de código)
 ```bash
 cd /Users/carlosescobar/Projects/hackaton_mibanco/project
 gcloud run deploy mibanco-validacion \
   --source . \
-  --project glamour-peru-dw \
+  --project mibanco-hackaton \
   --region us-central1 \
   --allow-unauthenticated \
   --min-instances=1 --max-instances=1 \
   --memory 1Gi --cpu 1 --timeout 300 \
-  --service-account aurora-agent-app@glamour-peru-dw.iam.gserviceaccount.com \
-  --set-env-vars GOOGLE_CLOUD_PROJECT=glamour-peru-dw,GOOGLE_CLOUD_LOCATION=us-central1,GEMINI_MODEL=gemini-2.5-flash,STORAGE_BACKEND=gcs,GCS_BUCKET=glamour-peru-dw-mibanco-uploads
+  --service-account mibanco-app@mibanco-hackaton.iam.gserviceaccount.com \
+  --set-env-vars GOOGLE_CLOUD_PROJECT=mibanco-hackaton,GOOGLE_CLOUD_LOCATION=us-central1,GEMINI_MODEL=gemini-2.5-flash,STORAGE_BACKEND=gcs,GCS_BUCKET=mibanco-hackaton-mibanco-uploads
 ```
 > Usa **Cloud Build** (no requiere Docker local — Docker NO está instalado en esta máquina).
 > El build tarda ~3-5 min.
@@ -190,9 +241,9 @@ gcloud run services update mibanco-validacion --region us-central1 --update-labe
 # backend
 cd backend && python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-export GOOGLE_CLOUD_PROJECT=glamour-peru-dw GOOGLE_CLOUD_LOCATION=us-central1 \
+export GOOGLE_CLOUD_PROJECT=mibanco-hackaton GOOGLE_CLOUD_LOCATION=us-central1 \
        GEMINI_MODEL=gemini-2.5-flash STORAGE_BACKEND=local
-gcloud auth application-default login   # ADC (ya existe en esta máquina)
+gcloud auth application-default login   # ADC: loguear con la cuenta carlos.escobar.arroyo@gmail.com
 uvicorn main:app --reload --port 8080
 # frontend (otra terminal)
 cd frontend && npm install && npm run dev   # http://localhost:5173 (proxy /api -> :8080)
@@ -203,7 +254,7 @@ cd frontend && npm install && npm run dev   # http://localhost:5173 (proxy /api 
 ## 9. Gotchas / aprendizajes (para no repetir)
 
 - **Docker no está instalado** localmente → deploy siempre vía `gcloud run deploy --source` (Cloud Build).
-- **IAM a nivel proyecto bloqueado** por el clasificador de seguridad → usar `aurora-agent-app@` +
+- **IAM a nivel proyecto bloqueado** por el clasificador de seguridad → usar `mibanco-app@` +
   bindings a nivel bucket.
 - **macOS Python SSL**: `urllib` falla verificación de certificados (`CERTIFICATE_VERIFY_FAILED`).
   Ya está mitigado en `msg_import.py` con fallback de contextos SSL.
@@ -315,9 +366,9 @@ falsos positivos (las capturas confirman que el banner CDN sí carga). **Playwri
 reagregues como dependencia. Patrón de verificación: `npm i -D playwright` temporal → screenshots → `npm
 uninstall playwright` → deploy.
 
-**Revisiones desplegadas (sesión 22/06/2026):** `00008-rrp` (preview + antes/después inicial) → `00009-wxn`
-(comparativo de dos columnas, reemplaza el diff interlineado ilegible) → `00010-hv2` (reorden del detalle:
-flujo → progreso → vista previa). **Revisión vigente: `mibanco-validacion-00010-hv2`.**
+**Cambios de esta sesión (22/06/2026):** preview con antes/después inicial → comparativo de dos
+columnas (reemplaza el diff interlineado ilegible) → reorden del detalle (flujo → progreso → vista
+previa). **Revisión vigente: `mibanco-validacion-00002-qnf`.**
 
 ---
 
