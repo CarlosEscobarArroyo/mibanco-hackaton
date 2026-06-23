@@ -14,6 +14,23 @@ def _tiene_keyword_riesgo(texto: str) -> bool:
     return any(k in t for k in criterios.KEYWORDS_REVISION_HUMANA)
 
 
+def _aplicar_severidad(sol, res, etiqueta_paso):
+    """Escala a revisión humana cuando un agente detecta nivel 'alerta' o 'critico'.
+
+    Realiza el mapa del documento: nivel 3 (naranja) y 4 (rojo) NO se auto-aprueban.
+    Solo añade información (no rompe el flujo binario basado en 'cumple').
+    """
+    nivel = str(res.get("nivel", "")).lower()
+    if not res.get("requiere_revision_humana") and nivel not in ("alerta", "critico"):
+        return
+    sol["requiereRevisionHumana"] = True
+    if sol.get("tipoRiesgo", "normal") in ("", "normal"):
+        sol["tipoRiesgo"] = "crítico — bloqueo" if nivel == "critico" else "alerta normativa"
+    log(sol, "Agente IA",
+        f"{etiqueta_paso}: nivel '{nivel or 'alerta'}' — escalado a revisión humana "
+        f"(acción sugerida: {res.get('accion', 'escalar')}).")
+
+
 def get(sid: str):
     return STORE.get(sid)
 
@@ -73,7 +90,10 @@ def _ejecutar_paso2(sol):
         "fallos": res.get("fallos", []),
         "principios": res.get("principios_afectados", []),
         "contenidoCorregido": res.get("contenido_corregido", sol["contenidoActual"]),
+        "nivel": res.get("nivel", "aprobado"),
+        "accion": res.get("accion", "aprobar"),
     }
+    _aplicar_severidad(sol, res, "Paso 2 (redacción)")
     if res.get("cumple"):
         sol["estados"]["paso2"] = "ok"
         log(sol, "Agente IA", "Paso 2 (redacción): sin observaciones.")
@@ -178,7 +198,11 @@ def _avanzar_a_paso4(sol):
         "observaciones": res.get("observaciones", []),
         "sugerencias": res.get("sugerencias", []),
         "contenidoCorregido": res.get("contenido_corregido", sol["contenidoActual"]),
+        "nivel": res.get("nivel", "aprobado"),
+        "accion": res.get("accion", "aprobar"),
+        "normas": res.get("normas", []),
     }
+    _aplicar_severidad(sol, res, "Paso 4 (legal)")
     if res.get("cumple"):
         sol["estados"]["paso4"] = "ok"
         log(sol, "Agente IA", "Paso 4 (legal): sin observaciones.")
