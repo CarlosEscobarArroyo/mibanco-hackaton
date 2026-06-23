@@ -518,3 +518,104 @@ mark.df-del{background:#fff;color:var(--danger);text-decoration:line-through;tex
   .modal.wide{max-width:100%}
   .prev-stage{padding:10px}
 }
+
+/* ============================================================
+   Dashboard — KPIs y gráficos del avance
+   ============================================================ */
+.dash{display:flex;flex-direction:column;gap:20px}
+.dash-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.dash-head h2{margin:0;font-size:22px;font-weight:900;line-height:1.15}
+.dash-head p{margin:4px 0 0;font-size:13px;color:var(--gray-d);font-weight:600}
+.dash-head-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.envtag.dark{background:var(--brand-50);color:var(--brand-700)}
+.envtag.dark .live{background:var(--brand)}
+.dash-refresh{padding:8px 13px;font-size:12px}
+
+/* KPIs */
+.dash-kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:14px}
+.dk{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-lg);box-shadow:var(--shadow-1);padding:15px 16px;display:flex;align-items:center;gap:13px;transition:transform .15s,box-shadow .15s}
+.dk:hover{transform:translateY(-2px);box-shadow:var(--shadow-2)}
+.dk-ic{width:46px;height:46px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.dk-body{min-width:0}
+.dk-big{font-family:'Nunito',sans-serif;font-size:28px;font-weight:900;line-height:1;color:var(--ink);font-variant-numeric:tabular-nums}
+.dk-lbl{font-size:11px;font-weight:800;letter-spacing:.3px;text-transform:uppercase;color:var(--gray-d);margin-top:5px}
+.dk-sub{font-size:11px;color:var(--gray-d);font-weight:600;margin-top:3px}
+
+/* Anillo de progreso */
+.ring-wrap{position:relative;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.ring-fill{transition:stroke-dasharray .7s cubic-bezier(.2,.8,.2,1)}
+.ring-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1}
+.ring-center b{font-family:'Nunito',sans-serif;font-size:22px;font-weight:900;color:var(--brand-700)}
+.ring-center span{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.3px;color:var(--gray-d);margin-top:2px}
+
+/* Grid de paneles */
+.dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-lg);box-shadow:var(--shadow-1);padding:18px}
+.panel-h{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+.panel-h h3{margin:0;font-size:15px;font-weight:800}
+.panel-s{font-size:11.5px;color:var(--gray-d);font-weight:600}
+
+/* Dona */
+.donut-row{display:flex;align-items:center;gap:22px;flex-wrap:wrap}
+.donut-wrap{position:relative;flex-shrink:0}
+.donut-seg{transition:stroke-dasharray .6s cubic-bezier(.2,.8,.2,1)}
+.donut-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1}
+.donut-center b{font-family:'Nunito',sans-serif;font-size:30px;font-weight:900;color:var(--ink)}
+.donut-center span{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:var(--gray-d);margin-top:3px}
+.donut-legend{flex:1;min-width:170px;display:flex;flex-direction:column;gap:9px}
+.leg-item{display:flex;align-items:center;gap:9px;font-size:12.5px}
+.leg-dot{width:11px;height:11px;border-radius:3px;flex-shrink:0}
+.leg-lbl{flex:1;color:var(--ink-soft);font-weight:600}
+.leg-val{font-weight:900;font-variant-numeric:tabular-nums;color:var(--ink)}
+.leg-pct{width:42px;text-align:right;font-size:11px;font-weight:700;color:var(--gray-d)}
+
+/* Embudo por etapa */
+.etapas{display:flex;flex-direction:column;gap:13px}
+.etapa-row{display:grid;grid-template-columns:1fr 130px 44px;align-items:center;gap:12px}
+.etapa-lbl{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:700;color:var(--ink-soft);min-width:0}
+.etapa-ic{font-size:15px;flex-shrink:0}
+.etapa-track{height:10px;border-radius:var(--radius-pill);background:var(--gray-l);overflow:hidden}
+.etapa-fill{height:100%;border-radius:var(--radius-pill);background:linear-gradient(90deg,var(--brand-300),var(--brand));transition:width .6s cubic-bezier(.2,.8,.2,1)}
+.etapa-val{font-size:12px;font-weight:800;color:var(--gray-d);text-align:right;font-variant-numeric:tabular-nums}
+
+/* Barras de composición (área / tipo) */
+.cbars{display:flex;flex-direction:column;gap:12px}
+.cbar-row{display:grid;grid-template-columns:110px 1fr 34px;align-items:center;gap:12px}
+.cbar-name{font-size:12.5px;font-weight:700;color:var(--ink-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cbar-track{height:18px;border-radius:var(--radius-pill);background:var(--gray-l);overflow:hidden}
+.cbar-fill{height:100%;display:flex;border-radius:var(--radius-pill);overflow:hidden;transition:width .6s cubic-bezier(.2,.8,.2,1)}
+.cbar-fill.solid{background:linear-gradient(90deg,var(--brand-300),var(--brand))}
+.cbar-seg{display:block;height:100%}
+.cbar-val{font-size:12.5px;font-weight:800;color:var(--ink);text-align:right;font-variant-numeric:tabular-nums}
+.cbar-legend{display:flex;flex-wrap:wrap;gap:7px 13px;margin-top:14px;padding-top:12px;border-top:1px dashed var(--line)}
+.leg-item-sm{display:inline-flex;align-items:center;gap:6px;font-size:10.5px;font-weight:700;color:var(--gray-d)}
+
+/* Atención requerida */
+.attn-empty{padding:22px;text-align:center;color:var(--brand-700);font-weight:700;font-size:13px;background:var(--brand-50);border-radius:var(--radius)}
+.attn-list{display:flex;flex-direction:column;gap:0}
+.attn-row{display:flex;align-items:center;gap:13px;padding:12px 4px;border-bottom:1px solid var(--line)}
+.attn-row:last-of-type{border-bottom:0}
+.attn-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.attn-meta{flex:1;min-width:0}
+.attn-ttl{font-size:14px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.attn-sub{font-size:11.5px;color:var(--gray-d);margin-top:2px}
+.attn-prog{display:flex;align-items:center;gap:7px;flex-shrink:0}
+.attn-prog-track{width:70px;height:7px;border-radius:var(--radius-pill);background:var(--gray-l);overflow:hidden}
+.attn-prog-fill{height:100%;background:linear-gradient(90deg,var(--brand-300),var(--brand));border-radius:var(--radius-pill)}
+.attn-prog span{font-size:11px;font-weight:800;color:var(--gray-d);font-variant-numeric:tabular-nums}
+.attn-badge{font-size:10px;font-weight:800;color:#fff;padding:4px 10px;border-radius:var(--radius-pill);white-space:nowrap;flex-shrink:0}
+.attn-cta{margin-top:14px;width:100%}
+
+@media(prefers-reduced-motion:reduce){
+  .ring-fill,.donut-seg,.etapa-fill,.cbar-fill{transition:none!important}
+}
+@media(max-width:980px){
+  .dash-kpis{grid-template-columns:repeat(2,1fr)}
+  .dash-grid{grid-template-columns:1fr}
+}
+@media(max-width:560px){
+  .dash-kpis{grid-template-columns:1fr}
+  .cbar-row{grid-template-columns:84px 1fr 30px;gap:8px}
+  .etapa-row{grid-template-columns:1fr 90px 40px;gap:8px}
+  .attn-prog{display:none}
+}

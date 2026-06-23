@@ -65,6 +65,16 @@ function estadoBadge(r, vista) {
   return { cls: 'b-proc', txt: 'En proceso' }
 }
 
+// Estado "macro" de una solicitud para el dashboard (consistente con estadoBadge).
+function macroEstado(r) {
+  if (r.publicado) return 'pub'
+  if (r.aprobadoCX) return 'aprob'
+  const e = Object.values(r.estados || {})
+  if (e.includes('obs')) return 'obs'
+  if (e.includes('wait')) return 'wait'
+  return 'proc'
+}
+
 export default function App() {
   const [vista, setVista] = useState('cx')
   const [lista, setLista] = useState([])
@@ -80,12 +90,15 @@ export default function App() {
 
   useEffect(() => { api.config().then(setCfg).catch(() => {}) }, [])
 
-  useEffect(() => {
-    api.listar(vista).then(data => {
+  function reloadLista(v = vista) {
+    return api.listar(v).then(data => {
       setLista(data)
-      if (selId && !data.find(s => s.id === selId)) setSelId(null)
+      setSelId(id => (id && !data.find(s => s.id === id) ? null : id))
+      return data
     }).catch(e => showToast('No se pudo cargar: ' + e.message))
-  }, [vista])
+  }
+
+  useEffect(() => { reloadLista(vista) }, [vista])
 
   function showToast(msg) { setToast(msg); setTimeout(() => setToast(null), 3200) }
 
@@ -164,12 +177,17 @@ export default function App() {
         {cfg && <span className="envtag"><span className="live"></span>🧠 {cfg.modelo?.model} · {cfg.storage?.backend}</span>}
         {vista === 'sol' && <button className="newbtn" onClick={() => setNuevaOpen(true)}><span className="plus">+</span> Nueva solicitud</button>}
         <div className="viewtoggle" role="tablist" aria-label="Cambiar de vista">
+          <button className={vista === 'dash' ? 'active' : ''} aria-current={vista === 'dash'} onClick={() => setVista('dash')}>📊 Dashboard</button>
           <button className={vista === 'cx' ? 'active' : ''} aria-current={vista === 'cx'} onClick={() => setVista('cx')}>👁 Vista CX</button>
           <button className={vista === 'sol' ? 'active' : ''} aria-current={vista === 'sol'} onClick={() => setVista('sol')}>✍ Vista Solicitante</button>
         </div>
       </header>
 
       <div className="wrap">
+        {vista === 'dash' ? (
+          <Dashboard lista={lista} cfg={cfg} onRefresh={() => reloadLista('dash')} onVerCX={() => setVista('cx')} />
+        ) : (
+        <>
         <div className={'who' + (vista === 'cx' ? ' cx' : '')}>
           <span className="role-chip">{vista === 'cx' ? '👁 CX' : '✍ Solicitante'}</span>
           <span>{who}</span>
@@ -212,6 +230,8 @@ export default function App() {
               : <div className="empty"><Sol cls="sol" /><span>Selecciona una solicitud de la izquierda para ver su flujo de validación.</span></div>}
           </div>
         </div>
+        </>
+        )}
       </div>
 
       {modalStep && selected && (
@@ -1050,5 +1070,278 @@ function NuevaModal({ onClose, onCrear, onImportar }) {
         </>
       )}
     </Modal>
+  )
+}
+
+// ============================================================
+//  Dashboard — KPIs y gráficos del avance (derivados de la lista)
+// ============================================================
+
+// Paleta (hex literal: SVG no resuelve var() en atributos de presentación).
+const DC = {
+  brand: '#009639', brand300: '#3FBC6F', sun: '#F8D000',
+  purple: '#7E57C2', info: '#2F6FB0', gray: '#C7CDD3', danger: '#C0392B', track: '#EEF1F3',
+}
+// Orden y metadatos del estado macro del pipeline.
+const ESTADO_META = [
+  { k: 'pub', lbl: 'Publicadas', color: DC.brand, ic: '🚀' },
+  { k: 'aprob', lbl: 'Aprobadas CX', color: DC.brand300, ic: '✅' },
+  { k: 'wait', lbl: 'Esperando CX', color: DC.purple, ic: '⏳' },
+  { k: 'obs', lbl: 'Con observaciones', color: DC.sun, ic: '🟡' },
+  { k: 'proc', lbl: 'En proceso', color: DC.info, ic: '⚙️' },
+]
+
+function groupCount(items, keyFn) {
+  const m = new Map()
+  for (const it of items) {
+    const k = keyFn(it) || '—'
+    m.set(k, (m.get(k) || 0) + 1)
+  }
+  return [...m.entries()].map(([k, v]) => ({ k, v })).sort((a, b) => b.v - a.v)
+}
+
+// Anillo de progreso (1 valor) en SVG.
+function Ring({ pct, size = 104, stroke = 11, color = DC.brand, label }) {
+  const r = (size - stroke) / 2
+  const c = 2 * Math.PI * r
+  const dash = (Math.max(0, Math.min(100, pct)) / 100) * c
+  return (
+    <div className="ring-wrap" style={{ width: size, height: size }}>
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} aria-hidden="true">
+        <g transform={`rotate(-90 ${size / 2} ${size / 2})`}>
+          <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={DC.track} strokeWidth={stroke} />
+          <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={color} strokeWidth={stroke}
+            strokeLinecap="round" strokeDasharray={`${dash} ${c - dash}`} className="ring-fill" />
+        </g>
+      </svg>
+      <div className="ring-center"><b>{pct}%</b>{label && <span>{label}</span>}</div>
+    </div>
+  )
+}
+
+// Dona de distribución en SVG + leyenda (la pinta el contenedor).
+function Donut({ segments, size = 176, stroke = 28, centerTop, centerBottom }) {
+  const total = segments.reduce((a, s) => a + s.value, 0)
+  const r = (size - stroke) / 2
+  const c = 2 * Math.PI * r
+  let acc = 0
+  const visibles = segments.filter(s => s.value > 0)
+  return (
+    <div className="donut-wrap" style={{ width: size, height: size }}>
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} role="img" aria-label="Distribución por estado">
+        <g transform={`rotate(-90 ${size / 2} ${size / 2})`}>
+          <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={DC.track} strokeWidth={stroke} />
+          {total > 0 && visibles.map((s, i) => {
+            const len = (s.value / total) * c
+            const off = -acc
+            acc += len
+            return <circle key={i} cx={size / 2} cy={size / 2} r={r} fill="none" stroke={s.color}
+              strokeWidth={stroke} strokeDasharray={`${len} ${c - len}`} strokeDashoffset={off}
+              className="donut-seg" style={{ ['--di']: i }} />
+          })}
+        </g>
+      </svg>
+      <div className="donut-center"><b>{centerTop}</b><span>{centerBottom}</span></div>
+    </div>
+  )
+}
+
+// Barra de composición horizontal: longitud = total/max, segmentada por estado.
+function CompBar({ segments, total, max }) {
+  const fillPct = max ? Math.max(6, (total / max) * 100) : 0
+  return (
+    <div className="cbar-track">
+      <div className="cbar-fill" style={{ width: fillPct + '%' }}>
+        {segments.filter(s => s.value > 0).map((s, i) => (
+          <span key={i} className="cbar-seg" style={{ flex: s.value, background: s.color }} title={`${s.lbl}: ${s.value}`} />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function Dashboard({ lista, cfg, onRefresh, onVerCX }) {
+  const total = lista.length
+
+  // Conteo por estado macro
+  const macro = { pub: 0, aprob: 0, wait: 0, obs: 0, proc: 0 }
+  lista.forEach(r => { macro[macroEstado(r)]++ })
+  const segEstado = ESTADO_META.map(m => ({ ...m, value: macro[m.k] }))
+
+  // Avance global = promedio de pasos completados (ok) sobre 5
+  const pasosOk = lista.reduce((a, r) => a + Object.values(r.estados || {}).filter(e => e === 'ok').length, 0)
+  const avgPct = total ? Math.round((pasosOk / (total * 5)) * 100) : 0
+
+  const publicadas = macro.pub
+  const aprobadas = macro.pub + macro.aprob
+  const pendientes = macro.obs + macro.wait
+  const tasaAprob = total ? Math.round((aprobadas / total) * 100) : 0
+  const revHumana = lista.filter(r => r.requiereRevisionHumana).length
+
+  // Embudo por etapa: cuántas solicitudes completaron (ok) cada paso
+  const etapas = STEPS.map(s => ({
+    ...s,
+    ok: lista.filter(r => r.estados['paso' + s.n] === 'ok').length,
+  }))
+
+  // Distribución por área (segmentada por estado, para ver el avance de cada área)
+  const areas = groupCount(lista, r => r.area)
+  const maxArea = Math.max(1, ...areas.map(a => a.v))
+  const areaSegs = (area) => ESTADO_META.map(m => ({
+    lbl: m.lbl, color: m.color,
+    value: lista.filter(r => r.area === area && macroEstado(r) === m.k).length,
+  }))
+
+  // Distribución por tipo de pieza (canal)
+  const tipos = groupCount(lista, r => r.tipo)
+  const maxTipo = Math.max(1, ...tipos.map(t => t.v))
+
+  // Solicitudes que requieren atención (observaciones o esperando CX)
+  const atencion = lista
+    .filter(r => ['obs', 'wait'].includes(macroEstado(r)))
+    .sort((a, b) => (macroEstado(a) === 'obs' ? 0 : 1) - (macroEstado(b) === 'obs' ? 0 : 1))
+
+  if (total === 0) return (
+    <div className="empty"><Sol cls="sol" /><span>Aún no hay solicitudes para graficar. Crea una desde la Vista Solicitante.</span></div>
+  )
+
+  return (
+    <div className="dash">
+      <div className="dash-head">
+        <div>
+          <h2>📊 Dashboard de avance</h2>
+          <p>Métricas en vivo del flujo de validación · {total} solicitud{total === 1 ? '' : 'es'} de todas las áreas</p>
+        </div>
+        <div className="dash-head-right">
+          {cfg && <span className="envtag dark"><span className="live"></span>🧠 {cfg.modelo?.model}</span>}
+          <button className="btn ghost dash-refresh" onClick={onRefresh} title="Actualizar métricas">↻ Actualizar</button>
+        </div>
+      </div>
+
+      {/* ---- KPIs ---- */}
+      <div className="dash-kpis">
+        <div className="dk">
+          <div className="dk-ic" style={{ background: 'var(--brand-50)', color: 'var(--brand-700)' }}>📋</div>
+          <div className="dk-body"><div className="dk-big">{total}</div><div className="dk-lbl">Solicitudes totales</div></div>
+        </div>
+        <div className="dk">
+          <Ring pct={avgPct} label="completado" />
+          <div className="dk-body"><div className="dk-lbl">Avance global</div><div className="dk-sub">{pasosOk} de {total * 5} pasos validados</div></div>
+        </div>
+        <div className="dk">
+          <div className="dk-ic" style={{ background: 'var(--brand-50)', color: 'var(--brand-700)' }}>✅</div>
+          <div className="dk-body"><div className="dk-big">{aprobadas}</div><div className="dk-lbl">Aprobadas / publicadas</div><div className="dk-sub">{tasaAprob}% del total · {publicadas} publicadas</div></div>
+        </div>
+        <div className="dk">
+          <div className="dk-ic" style={{ background: 'var(--sun-50)', color: 'var(--warning)' }}>⚠️</div>
+          <div className="dk-body"><div className="dk-big">{pendientes}</div><div className="dk-lbl">Requieren acción</div><div className="dk-sub">{macro.obs} con observaciones · {macro.wait} esperando CX</div></div>
+        </div>
+        <div className="dk">
+          <div className="dk-ic" style={{ background: 'var(--danger-50)', color: 'var(--danger)' }}>🛡️</div>
+          <div className="dk-body"><div className="dk-big">{revHumana}</div><div className="dk-lbl">Revisión humana</div><div className="dk-sub">clasificadas como riesgo</div></div>
+        </div>
+      </div>
+
+      {/* ---- Gráficos ---- */}
+      <div className="dash-grid">
+        <div className="panel">
+          <div className="panel-h"><h3>Estado del pipeline</h3><span className="panel-s">distribución de solicitudes</span></div>
+          <div className="donut-row">
+            <Donut segments={segEstado} centerTop={total} centerBottom="solicitudes" />
+            <div className="donut-legend">
+              {segEstado.map(s => (
+                <div key={s.k} className="leg-item">
+                  <span className="leg-dot" style={{ background: s.color }} />
+                  <span className="leg-lbl">{s.lbl}</span>
+                  <span className="leg-val">{s.value}</span>
+                  <span className="leg-pct">{total ? Math.round((s.value / total) * 100) : 0}%</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="panel">
+          <div className="panel-h"><h3>Avance por etapa</h3><span className="panel-s">solicitudes que completaron cada paso</span></div>
+          <div className="etapas">
+            {etapas.map(s => {
+              const pct = total ? Math.round((s.ok / total) * 100) : 0
+              return (
+                <div key={s.n} className="etapa-row">
+                  <div className="etapa-lbl"><span className="etapa-ic">{s.ic}</span><span>{s.n}. {s.lbl}</span></div>
+                  <div className="etapa-track"><div className="etapa-fill" style={{ width: pct + '%' }} /></div>
+                  <div className="etapa-val">{s.ok}/{total}</div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+
+        <div className="panel">
+          <div className="panel-h"><h3>Por área solicitante</h3><span className="panel-s">volumen y estado</span></div>
+          <div className="cbars">
+            {areas.map(a => (
+              <div key={a.k} className="cbar-row">
+                <div className="cbar-name">{a.k}</div>
+                <CompBar segments={areaSegs(a.k)} total={a.v} max={maxArea} />
+                <div className="cbar-val">{a.v}</div>
+              </div>
+            ))}
+          </div>
+          <div className="cbar-legend">
+            {ESTADO_META.map(m => (
+              <span key={m.k} className="leg-item-sm"><span className="leg-dot" style={{ background: m.color }} />{m.lbl}</span>
+            ))}
+          </div>
+        </div>
+
+        <div className="panel">
+          <div className="panel-h"><h3>Por tipo de pieza</h3><span className="panel-s">canal de comunicación</span></div>
+          <div className="cbars">
+            {tipos.map(t => {
+              const pct = Math.max(6, (t.v / maxTipo) * 100)
+              return (
+                <div key={t.k} className="cbar-row">
+                  <div className="cbar-name">{t.k}</div>
+                  <div className="cbar-track"><div className="cbar-fill solid" style={{ width: pct + '%' }} /></div>
+                  <div className="cbar-val">{t.v}</div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* ---- Atención requerida ---- */}
+      <div className="panel attn">
+        <div className="panel-h">
+          <h3>Requieren atención</h3>
+          <span className="panel-s">{atencion.length} solicitud{atencion.length === 1 ? '' : 'es'} con observaciones o esperando aprobación</span>
+        </div>
+        {atencion.length === 0 ? (
+          <div className="attn-empty">✓ Todo al día: ninguna solicitud pendiente de acción.</div>
+        ) : (
+          <div className="attn-list">
+            {atencion.map(r => {
+              const m = macroEstado(r)
+              const meta = ESTADO_META.find(x => x.k === m)
+              const done = Object.values(r.estados || {}).filter(e => e === 'ok').length
+              return (
+                <div key={r.id} className="attn-row">
+                  <span className="attn-dot" style={{ background: meta?.color }} />
+                  <div className="attn-meta">
+                    <div className="attn-ttl">{r.titulo}</div>
+                    <div className="attn-sub">{r.id} · {r.area} · {r.tipo}{r.requiereRevisionHumana ? ' · ⚠ revisión humana' : ''}</div>
+                  </div>
+                  <div className="attn-prog"><div className="attn-prog-track"><div className="attn-prog-fill" style={{ width: (done / 5 * 100) + '%' }} /></div><span>{done}/5</span></div>
+                  <span className="attn-badge" style={{ background: meta?.color }}>{meta?.lbl}</span>
+                </div>
+              )
+            })}
+            {onVerCX && <button className="btn ghost attn-cta" onClick={onVerCX}>Ir a la Vista CX para gestionarlas →</button>}
+          </div>
+        )}
+      </div>
+    </div>
   )
 }
