@@ -74,7 +74,7 @@ function MibancoLogo({ dark = false }) {
     )
   })
   return (
-    <svg height="32" viewBox="0 0 158 32" style={{ display: 'block', flexShrink: 0 }} aria-label="mibanco">
+    <svg height="36" viewBox="0 0 158 32" style={{ display: 'block', flexShrink: 0 }} aria-label="mibanco">
       <text x="29" y="23.5"
         style={{ fontFamily: "'Nunito',sans-serif", fontWeight: 900, fontSize: '21px', fill: textFill }}>
         mibanco
@@ -370,7 +370,7 @@ function Detalle({ sol, vista, onOpenStep, pending }) {
       {sol.requiereRevisionHumana && (
         <div className="riesgo-banner">
           <span className="ic" aria-hidden="true"><AlertTriangle size={18} /></span>
-          <span><b>Requiere revisión humana obligatoria</b>Clasificada como «{sol.tipoRiesgo}». No se auto-aprueba en los pasos de IA.</span>
+          <span><b>Requiere revisión humana obligatoria</b>Clasificada como "{sol.tipoRiesgo}". No se auto-aprueba en los pasos de IA.</span>
         </div>
       )}
 
@@ -395,7 +395,7 @@ function Detalle({ sol, vista, onOpenStep, pending }) {
             <React.Fragment key={s.n}>
               <div className={'step ' + (isWorking ? 'working' : estado)}>
                 <div className="box" role="button" tabIndex={clickable ? 0 : -1} aria-disabled={!clickable}
-                  aria-label={`Paso ${s.n}: ${s.lbl} — ${isWorking ? 'Procesando' : ST_TXT[estado]}`}
+                  aria-label={`Paso ${s.n}: ${s.lbl} - ${isWorking ? 'Procesando' : ST_TXT[estado]}`}
                   onClick={() => clickable && onOpenStep(s.n)}
                   onKeyDown={ev => { if (clickable && (ev.key === 'Enter' || ev.key === ' ')) { ev.preventDefault(); onOpenStep(s.n) } }}>
                   {isWorking && <span className="box-spin" aria-hidden="true" />}
@@ -486,7 +486,7 @@ function StepModal({ sol, step, vista, onClose, actions }) {
       <div className="kv"><b>Fecha</b><span>{sol.fecha}</span></div>
       <div className="kv"><b>Área solicitante</b><span>{sol.area}</span></div>
       <div className="kv"><b>Tipo de pieza</b><span>{sol.tipo}</span></div>
-      <div className="kv"><b>Asesor</b><span>{sol.asesor?.nombre || '—'} {sol.asesor?.telefono ? '· ' + sol.asesor.telefono : ''}</span></div>
+      <div className="kv"><b>Asesor</b><span>{sol.asesor?.nombre || '-'} {sol.asesor?.telefono ? '· ' + sol.asesor.telefono : ''}</span></div>
       <div className="kv"><b>Contenido recibido</b><span>{sol.contenidoOriginal}</span></div>
       {sol.requiereRevisionHumana && <div className="note bad">Clasificada como <b>{sol.tipoRiesgo}</b>: requiere revisión humana obligatoria.</div>}
     </Modal>
@@ -651,7 +651,7 @@ function StepModal({ sol, step, vista, onClose, actions }) {
         <div className="note ok"><b>Brief generado automáticamente</b> · resumen de todos los pasos.</div>
         <div className="brief-box">{sol.brief || 'Generando brief…'}</div>
         <PreviewPanel sol={sol} texto={sol.contenidoActual} defaultOpen={false} />
-        <div className="kv" style={{ marginTop: 12 }}><b>Pieza</b><span>{sol.tipo} — {sol.titulo}</span></div>
+        <div className="kv" style={{ marginTop: 12 }}><b>Pieza</b><span>{sol.tipo} - {sol.titulo}</span></div>
         <div className="kv"><b>Área</b><span>{sol.area}</span></div>
         <div className="kv"><b>Versión final</b><span>{sol.contenidoActual}</span></div>
         <div style={{ marginTop: 12 }}>{summary}</div>
@@ -1102,7 +1102,7 @@ function NuevaModal({ onClose, onCrear, onImportar }) {
         <button className="btn ghost" onClick={onClose}>Cancelar</button>
         <button className="btn primary" onClick={submit}>{modo === 'msg' ? 'Importar y validar con IA' : 'Enviar y validar con IA'}</button>
       </>}>
-      <div className="note info">Eres el <b>solicitante (Área Productos)</b>. Elige el tipo de mensaje que quieres enviar: puedes escribirlo o adjuntar el correo de Outlook (<b>.msg</b>). Los agentes Gemini lo validan en vivo y la solicitud quedará visible también para el equipo CX.</div>
+      <div className="note info" style={{ flexWrap: 'wrap', lineHeight: 1.6 }}><span style={{ flex: 1, minWidth: 0, whiteSpace: 'normal' }}>Eres el <b>solicitante (Área Productos)</b>. Elige el tipo de mensaje que quieres enviar: puedes escribirlo o adjuntar el correo de Outlook (<b>.msg</b>). Los agentes Gemini lo validan en vivo y la solicitud quedará visible también para el equipo CX.</span></div>
 
       <label className="fld">Tipo de mensaje que quieres enviar</label>
       {modo === 'escribir'
@@ -1156,13 +1156,13 @@ function NuevaModal({ onClose, onCrear, onImportar }) {
 // Paleta oficial Mibanco (hex literal: SVG no resuelve var() en atributos de presentación).
 const DC = {
   brand: '#00964B', brand300: '#71B74C', sun: '#FFD100',
-  obs: '#E63946', info: '#2563EB', wait: '#CA7C2F',
+  obs: '#E63946', info: '#2563EB', wait: '#7E57C2',
   gray: '#9CA3AF', danger: '#E63946', track: '#EEF1F3',
 }
 const ESTADO_META = [
   { k: 'pub', lbl: 'Publicadas', color: '#00964B' },
   { k: 'aprob', lbl: 'Aprobadas CX', color: '#71B74C' },
-  { k: 'wait', lbl: 'Esperando CX', color: '#CA7C2F' },
+  { k: 'wait', lbl: 'Esperando CX', color: '#7E57C2' },
   { k: 'obs', lbl: 'Con observaciones', color: '#E63946' },
   { k: 'proc', lbl: 'En proceso', color: '#2563EB' },
 ]
@@ -1170,7 +1170,7 @@ const ESTADO_META = [
 function groupCount(items, keyFn) {
   const m = new Map()
   for (const it of items) {
-    const k = keyFn(it) || '—'
+    const k = keyFn(it) || '-'
     m.set(k, (m.get(k) || 0) + 1)
   }
   return [...m.entries()].map(([k, v]) => ({ k, v })).sort((a, b) => b.v - a.v)
