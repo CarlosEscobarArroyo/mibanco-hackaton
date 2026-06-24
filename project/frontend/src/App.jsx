@@ -1,62 +1,135 @@
 import React, { useEffect, useState } from 'react'
 import { api } from './api.js'
 
+// ============================================================
+//  Íconos SVG inline (estilo Lucide, sin dependencia externa)
+// ============================================================
+function LI({ size = 16, style, children, ...rest }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"
+      style={{ display: 'inline-block', verticalAlign: 'middle', flexShrink: 0, ...style }}
+      aria-hidden="true" {...rest}>
+      {children}
+    </svg>
+  )
+}
+const LayoutDashboard = ({ size = 16, ...p }) => <LI size={size} {...p}><rect width="7" height="9" x="3" y="3" rx="1" /><rect width="7" height="5" x="14" y="3" rx="1" /><rect width="7" height="9" x="14" y="12" rx="1" /><rect width="7" height="5" x="3" y="16" rx="1" /></LI>
+const ShieldCheck = ({ size = 16, ...p }) => <LI size={size} {...p}><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" /><path d="m9 12 2 2 4-4" /></LI>
+const UserCircle = ({ size = 16, ...p }) => <LI size={size} {...p}><circle cx="12" cy="12" r="10" /><circle cx="12" cy="10" r="3" /><path d="M7 20.662V19a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v1.662" /></LI>
+const FileText = ({ size = 16, ...p }) => <LI size={size} {...p}><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" /><path d="M14 2v4a2 2 0 0 0 2 2h4" /><path d="M10 9H8" /><path d="M16 13H8" /><path d="M16 17H8" /></LI>
+const Clock = ({ size = 16, ...p }) => <LI size={size} {...p}><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></LI>
+const CheckSquare = ({ size = 16, ...p }) => <LI size={size} {...p}><path d="M21 10.5V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h12.5" /><path d="m9 11 3 3L22 4" /></LI>
+const Inbox = ({ size = 16, ...p }) => <LI size={size} {...p}><polyline points="22 12 16 12 14 15 10 15 8 12 2 12" /><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z" /></LI>
+const PenLine = ({ size = 16, ...p }) => <LI size={size} {...p}><path d="M12 20h9" /><path d="M16.376 3.622a1 1 0 0 1 3.002 3.002L7.368 18.635a2 2 0 0 1-.855.506l-2.872.838a.5.5 0 0 1-.62-.62l.838-2.872a2 2 0 0 1 .506-.854z" /></LI>
+const Palette = ({ size = 16, ...p }) => <LI size={size} {...p}><circle cx="13.5" cy="6.5" r=".5" fill="currentColor" /><circle cx="17.5" cy="10.5" r=".5" fill="currentColor" /><circle cx="8.5" cy="7.5" r=".5" fill="currentColor" /><circle cx="6.5" cy="12.5" r=".5" fill="currentColor" /><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z" /></LI>
+const Scale = ({ size = 16, ...p }) => <LI size={size} {...p}><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z" /><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z" /><path d="M7 21h10" /><path d="M12 3v18" /><path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2" /></LI>
+const ClipboardCheck = ({ size = 16, ...p }) => <LI size={size} {...p}><rect width="8" height="4" x="8" y="2" rx="1" ry="1" /><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" /><path d="m9 14 2 2 4-4" /></LI>
+const Eye = ({ size = 16, ...p }) => <LI size={size} {...p}><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" /></LI>
+const FileSearch = ({ size = 16, ...p }) => <LI size={size} {...p}><path d="M14 2v4a2 2 0 0 0 2 2h4" /><path d="M4.268 21a2 2 0 0 0 1.727 1H18a2 2 0 0 0 2-2V7l-5-5H6a2 2 0 0 0-2 2v3" /><path d="m9 18-1.5-1.5" /><circle cx="5" cy="14" r="3" /></LI>
+const AlertTriangle = ({ size = 16, ...p }) => <LI size={size} {...p}><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" /><path d="M12 9v4" /><path d="M12 17h.01" /></LI>
+const UserCheck = ({ size = 16, ...p }) => <LI size={size} {...p}><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><polyline points="16 11 18 13 22 9" /></LI>
+const Headphones = ({ size = 16, ...p }) => <LI size={size} {...p}><path d="M3 14h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a9 9 0 0 1 18 0v7a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3" /></LI>
+const Mail = ({ size = 16, ...p }) => <LI size={size} {...p}><rect width="20" height="16" x="2" y="4" rx="2" /><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" /></LI>
+const AlertCircle = ({ size = 16, ...p }) => <LI size={size} {...p}><circle cx="12" cy="12" r="10" /><line x1="12" x2="12" y1="8" y2="12" /><line x1="12" x2="12.01" y1="16" y2="16" /></LI>
+
 const STEPS = [
-  { n: 1, lbl: 'Recepción', ic: '📥' },
-  { n: 2, lbl: 'Redacción IA', ic: '✍️' },
-  { n: 3, lbl: 'Marca / Imágenes IA', ic: '🎨' },
-  { n: 4, lbl: 'Legal y Cumplimiento', ic: '⚖️' },
-  { n: 5, lbl: 'Brief + Aprobación CX', ic: '🏁' },
+  { n: 1, lbl: 'Recepción', Ic: Inbox },
+  { n: 2, lbl: 'Redacción IA', Ic: PenLine },
+  { n: 3, lbl: 'Marca / Imágenes IA', Ic: Palette },
+  { n: 4, lbl: 'Legal y Cumplimiento', Ic: Scale },
+  { n: 5, lbl: 'Brief + Aprobación CX', Ic: ClipboardCheck },
 ]
 const ST_TXT = { ok: 'Completado', obs: 'Observado', proc: 'En proceso', wait: 'Esperando CX', locked: 'Bloqueado' }
 const TIPOS = ['SMS', 'Email', 'WhatsApp', 'Push notification', 'Carta', 'Speech']
 
-// Isotipo Mibanco: "espiral de progreso" — rayos amarillos de longitud creciente alrededor de un sol.
+// Isotipo Mibanco: sol amarillo con rayos triangulares — reutilizado en mockups de canal.
 function Sol({ cls = 'sol', label }) {
   const rays = [0, 40, 80, 120, 160, 200, 240, 280, 320]
   const a11y = label ? { role: 'img', 'aria-label': label } : { 'aria-hidden': 'true' }
   return (
     <svg className={cls} viewBox="0 0 48 48" {...a11y}>
-      <g fill="#F8D000">
+      <g fill="#FFD100">
         {rays.map((deg, i) => {
           const L = 5 + i * 1.3
           return <rect key={i} x="22.5" y={16 - L} width="3" height={L} rx="1.5" transform={`rotate(${deg} 24 24)`} />
         })}
       </g>
-      <circle cx="24" cy="24" r="7" fill="#F8D000" />
+      <circle cx="24" cy="24" r="7" fill="#FFD100" />
     </svg>
   )
 }
 
-// Isotipo "mi banquito": un pan tostado humeante (quemado).
-function PanQuemado({ cls = 'pan', label }) {
-  const a11y = label ? { role: 'img', 'aria-label': label } : { 'aria-hidden': 'true' }
+// Logo oficial Mibanco: sol con rayos triangulares + wordmark "mibanco".
+function MibancoLogo({ dark = false }) {
+  const textFill = dark ? '#00964B' : '#FFFFFF'
+  const rays = Array.from({ length: 16 }, (_, i) => {
+    const a = (i / 16) * 2 * Math.PI
+    const tx = Math.cos(a) * 15, ty = Math.sin(a) * 15
+    const al = a - 0.2, ar = a + 0.2
+    return (
+      <polygon key={i}
+        points={`${(Math.cos(al) * 8.5).toFixed(2)},${(Math.sin(al) * 8.5).toFixed(2)} ${tx.toFixed(2)},${ty.toFixed(2)} ${(Math.cos(ar) * 8.5).toFixed(2)},${(Math.sin(ar) * 8.5).toFixed(2)}`}
+        fill="#FFD100" />
+    )
+  })
   return (
-    <svg className={cls} viewBox="0 0 48 48" {...a11y}>
-      {/* humo */}
-      <g fill="none" stroke="#9AA0A6" strokeWidth="2" strokeLinecap="round" opacity=".55">
-        <path d="M16 17c-3-2 2-4-1-7" />
-        <path d="M24 16c-3-2 2-4-1-7" />
-        <path d="M32 17c-3-2 2-4-1-7" />
-      </g>
-      {/* cuerpo del pan */}
-      <path d="M8 34c0-9 7-16 16-16s16 7 16 16c0 2-1 3-3 3H11c-2 0-3-1-3-3z" fill="#B5772B" />
-      {/* corteza inferior */}
-      <path d="M8.2 31C8 32 8 33 8 34c0 2 1 3 3 3h26c2 0 3-1 3-3 0-1 0-2-.2-3H8.2z" fill="#7A4A18" />
-      {/* zonas quemadas */}
-      <g fill="#2E1A0B">
-        <ellipse cx="18" cy="24" rx="4.5" ry="3.2" />
-        <ellipse cx="29.5" cy="26" rx="5" ry="3.6" />
-        <ellipse cx="24" cy="21" rx="3" ry="2.2" />
-        <circle cx="34" cy="29" r="2.2" />
-        <circle cx="12.5" cy="30" r="2" />
+    <svg height="32" viewBox="0 0 158 32" style={{ display: 'block', flexShrink: 0 }} aria-label="mibanco">
+      <text x="29" y="23.5"
+        style={{ fontFamily: "'Nunito',sans-serif", fontWeight: 900, fontSize: '21px', fill: textFill }}>
+        mibanco
+      </text>
+      <g transform="translate(16,16)">
+        {rays}
+        <circle r="8.5" fill="#FFD100" />
       </g>
     </svg>
+  )
+}
+
+// Modal de carga moderno con logo, dots animados, nodos de etapa y tagline.
+function LoadingModal({ message }) {
+  const [activeStep, setActiveStep] = useState(1)
+  useEffect(() => {
+    let step = 1
+    const timer = setInterval(() => {
+      step++
+      if (step > 5) { clearInterval(timer); return }
+      setActiveStep(step)
+    }, 2400)
+    return () => clearInterval(timer)
+  }, [])
+  return (
+    <div className="busy-overlay" role="status" aria-live="polite">
+      <div className="busy-card">
+        <MibancoLogo dark />
+        <div className="busy-dots">
+          {[0, 1, 2, 3, 4].map(i => (
+            <span key={i} className="busy-dot" style={{ animationDelay: `${i * 0.18}s` }} />
+          ))}
+        </div>
+        <div className="busy-stages">
+          {STEPS.map((s, i) => {
+            const done = s.n < activeStep
+            const active = s.n === activeStep
+            return (
+              <div key={s.n} className={`busy-sitem ${done ? 'sdone' : active ? 'sactive' : 'spend'}`}>
+                <div className="busy-snum">{s.n}</div>
+                <div className="busy-slbl">{s.lbl}</div>
+              </div>
+            )
+          })}
+        </div>
+        <p className="busy-tagline">
+          Escribimos juntos <span>historias de progreso</span>
+        </p>
+      </div>
+    </div>
   )
 }
 
 function estadoBadge(r, vista) {
-  if (r.publicado) return { cls: 'b-pub', txt: 'Publicado 🚀' }
+  if (r.publicado) return { cls: 'b-pub', txt: 'Publicado' }
   if (r.aprobadoCX) return { cls: 'b-pub', txt: vista === 'sol' ? 'Aprobado · listo para publicar' : 'Aprobado' }
   const e = Object.values(r.estados || {})
   if (e.includes('obs')) return { cls: 'b-obs', txt: 'Con observaciones' }
@@ -65,7 +138,6 @@ function estadoBadge(r, vista) {
   return { cls: 'b-proc', txt: 'En proceso' }
 }
 
-// Estado "macro" de una solicitud para el dashboard (consistente con estadoBadge).
 function macroEstado(r) {
   if (r.publicado) return 'pub'
   if (r.aprobadoCX) return 'aprob'
@@ -82,7 +154,7 @@ export default function App() {
   const [modalStep, setModalStep] = useState(null)
   const [nuevaOpen, setNuevaOpen] = useState(false)
   const [busy, setBusy] = useState(null)
-  const [pending, setPending] = useState(null) // { id, paso, label } — cambio del agente en segundo plano
+  const [pending, setPending] = useState(null)
   const [toast, setToast] = useState(null)
   const [cfg, setCfg] = useState(null)
 
@@ -114,26 +186,25 @@ export default function App() {
     })
   }
 
-  // -------- acciones (en segundo plano: cierra el modal y procesa sin bloquear) --------
   async function runBg(id, paso, label, fn, done) {
     setModalStep(null)
     setPending({ id, paso, label })
-    showToast('🤖 ' + label)
+    showToast(label)
     try { const s = await fn(); upsert(s); if (done) showToast(done(s)) }
     catch (e) { showToast('Error: ' + e.message) }
     finally { setPending(p => (p && p.id === id ? null : p)) }
   }
-  const onAceptar2 = (id) => runBg(id, 2, 'Aplicando la corrección de redacción…', () => api.aceptarPaso2(id), () => '✔ Corrección aplicada')
-  const onRevalidar2 = (id, txt) => runBg(id, 2, 'Re-validando tu redacción con IA…', () => api.revalidarPaso2(id, txt), s => s.estados.paso2 === 'ok' ? '✔ La IA aprobó tu versión' : '⚠ La IA encontró observaciones')
-  const onSubirImg = (id, file, repl) => runBg(id, 3, 'Validando la imagen con IA…', () => api.subirImagen(id, file, repl), s => s.estados.paso3 === 'ok' ? '✔ Imagen validada' : '⚠ La imagen aún tiene observaciones')
-  const onAceptar4 = (id) => runBg(id, 4, 'Aplicando el ajuste legal…', () => api.aceptarPaso4(id), () => '✔ Ajuste legal aplicado')
-  const onRevalidar4 = (id, txt) => runBg(id, 4, 'Re-validando con Legal…', () => api.revalidarPaso4(id, txt), s => s.estados.paso4 === 'ok' ? '✔ Conforme' : '⚠ Aún hay observaciones legales')
-  const onAprobar = (id) => runBg(id, 5, 'Registrando la aprobación de CX…', () => api.aprobar(id), () => '✔ Solicitud aprobada por CX')
-  const onPublicar = (id) => runBg(id, 5, 'Publicando la comunicación…', () => api.publicar(id), () => '🚀 Comunicación publicada')
+  const onAceptar2 = (id) => runBg(id, 2, 'Aplicando la corrección de redacción…', () => api.aceptarPaso2(id), () => 'Corrección aplicada')
+  const onRevalidar2 = (id, txt) => runBg(id, 2, 'Re-validando tu redacción con IA…', () => api.revalidarPaso2(id, txt), s => s.estados.paso2 === 'ok' ? 'La IA aprobó tu versión' : 'La IA encontró observaciones')
+  const onSubirImg = (id, file, repl) => runBg(id, 3, 'Validando la imagen con IA…', () => api.subirImagen(id, file, repl), s => s.estados.paso3 === 'ok' ? 'Imagen validada' : 'La imagen aún tiene observaciones')
+  const onAceptar4 = (id) => runBg(id, 4, 'Aplicando el ajuste legal…', () => api.aceptarPaso4(id), () => 'Ajuste legal aplicado')
+  const onRevalidar4 = (id, txt) => runBg(id, 4, 'Re-validando con Legal…', () => api.revalidarPaso4(id, txt), s => s.estados.paso4 === 'ok' ? 'Conforme' : 'Aún hay observaciones legales')
+  const onAprobar = (id) => runBg(id, 5, 'Registrando la aprobación de CX…', () => api.aprobar(id), () => 'Solicitud aprobada por CX')
+  const onPublicar = (id) => runBg(id, 5, 'Publicando la comunicación…', () => api.publicar(id), () => 'Comunicación publicada')
 
   async function onImportar(file, area) {
     setNuevaOpen(false)
-    await withBusy('📧 Importando correo (.msg) y validando con IA…', async () => {
+    await withBusy('Importando correo (.msg) y validando con IA…', async () => {
       const sol = await api.importarMsg(file, area)
       const data = await api.listar(vista)
       setLista(data)
@@ -145,9 +216,8 @@ export default function App() {
 
   async function onCrear(form) {
     setNuevaOpen(false)
-    await withBusy('🤖 Los agentes IA están validando tu comunicación…', async () => {
+    await withBusy('Los agentes IA están validando tu comunicación…', async () => {
       const sol = await api.crear(form)
-      // recarga la lista respetando la vista actual
       const data = await api.listar(vista)
       setLista(data)
       if (data.find(s => s.id === sol.id)) setSelId(sol.id)
@@ -160,7 +230,6 @@ export default function App() {
     ? 'Vista CX · Monitoreas TODAS las solicitudes de todas las áreas. Intervienes en el Paso 5 (aprobación final).'
     : 'Vista Solicitante · Ves SOLO tus solicitudes (Área Productos). Atiendes observaciones en los Pasos 2, 3 y 4 y publicas cuando CX aprueba.'
 
-  // Métricas del dashboard — derivadas de la lista, sin llamadas API nuevas.
   const stats = {
     total: lista.length,
     obs: lista.filter(r => Object.values(r.estados || {}).includes('obs')).length,
@@ -171,15 +240,26 @@ export default function App() {
   return (
     <>
       <header>
-        <span className="logo"><PanQuemado cls="pan" label="mi banquito" /><b>mi banquito</b></span>
+        <span className="logo"><MibancoLogo /></span>
         <span className="sub">Validación de Comunicaciones · IA Multiagente</span>
         <span className="spacer"></span>
-        {cfg && <span className="envtag"><span className="live"></span>🧠 {cfg.modelo?.model} · {cfg.storage?.backend}</span>}
+        {cfg && (
+          <span className="envtag">
+            <span className="live"></span>
+            {cfg.modelo?.model} · {cfg.storage?.backend}
+          </span>
+        )}
         {vista === 'sol' && <button className="newbtn" onClick={() => setNuevaOpen(true)}><span className="plus">+</span> Nueva solicitud</button>}
         <div className="viewtoggle" role="tablist" aria-label="Cambiar de vista">
-          <button className={vista === 'dash' ? 'active' : ''} aria-current={vista === 'dash'} onClick={() => setVista('dash')}>📊 Dashboard</button>
-          <button className={vista === 'cx' ? 'active' : ''} aria-current={vista === 'cx'} onClick={() => setVista('cx')}>👁 Vista CX</button>
-          <button className={vista === 'sol' ? 'active' : ''} aria-current={vista === 'sol'} onClick={() => setVista('sol')}>✍ Vista Solicitante</button>
+          <button className={vista === 'dash' ? 'active' : ''} aria-current={vista === 'dash'} onClick={() => setVista('dash')}>
+            <LayoutDashboard size={16} /> Dashboard
+          </button>
+          <button className={vista === 'cx' ? 'active' : ''} aria-current={vista === 'cx'} onClick={() => setVista('cx')}>
+            <ShieldCheck size={16} /> Vista CX
+          </button>
+          <button className={vista === 'sol' ? 'active' : ''} aria-current={vista === 'sol'} onClick={() => setVista('sol')}>
+            <UserCircle size={16} /> Vista Solicitante
+          </button>
         </div>
       </header>
 
@@ -189,22 +269,38 @@ export default function App() {
         ) : (
         <>
         <div className={'who' + (vista === 'cx' ? ' cx' : '')}>
-          <span className="role-chip">{vista === 'cx' ? '👁 CX' : '✍ Solicitante'}</span>
+          <span className="role-chip">
+            {vista === 'cx'
+              ? <><ShieldCheck size={12} style={{ marginRight: 4 }} />CX</>
+              : <><UserCircle size={12} style={{ marginRight: 4 }} />Solicitante</>}
+          </span>
           <span>{who}</span>
         </div>
 
         <div className="stats">
-          <div className="stat s-total"><span className="ic" aria-hidden="true">📋</span><div className="big">{stats.total}</div><div className="lbl">Solicitudes</div></div>
-          <div className="stat s-obs"><span className="ic" aria-hidden="true">🟡</span><div className="big">{stats.obs}</div><div className="lbl">Con observaciones</div></div>
-          <div className="stat s-wait"><span className="ic" aria-hidden="true">⏳</span><div className="big">{stats.wait}</div><div className="lbl">Esperando CX</div></div>
-          <div className="stat s-ok"><span className="ic" aria-hidden="true">✅</span><div className="big">{stats.ok}</div><div className="lbl">Aprobadas / publicadas</div></div>
+          <div className="stat s-total">
+            <span className="ic" aria-hidden="true"><FileText size={18} /></span>
+            <div className="big">{stats.total}</div><div className="lbl">Solicitudes</div>
+          </div>
+          <div className="stat s-obs">
+            <span className="ic" aria-hidden="true"><AlertCircle size={18} /></span>
+            <div className="big">{stats.obs}</div><div className="lbl">Con observaciones</div>
+          </div>
+          <div className="stat s-wait">
+            <span className="ic" aria-hidden="true"><Clock size={18} /></span>
+            <div className="big">{stats.wait}</div><div className="lbl">Esperando CX</div>
+          </div>
+          <div className="stat s-ok">
+            <span className="ic" aria-hidden="true"><CheckSquare size={18} /></span>
+            <div className="big">{stats.ok}</div><div className="lbl">Aprobadas / publicadas</div>
+          </div>
         </div>
 
         <div className="grid">
           <div className="card">
             <h3>{vista === 'cx' ? 'Solicitudes de todas las áreas' : 'Mis solicitudes · Área Productos'}<span className="count">{lista.length}</span></h3>
             {lista.length === 0
-              ? <div className="empty"><Sol cls="sol" /><span>No hay solicitudes.</span></div>
+              ? <div className="empty"><FileSearch size={46} style={{ opacity: .4 }} /><span>No hay solicitudes.</span></div>
               : lista.map(r => {
                 const st = estadoBadge(r, vista)
                 return (
@@ -215,7 +311,7 @@ export default function App() {
                       <div className="pills">
                         <span className="pill area">{r.area}</span>
                         <span className="pill tipo">{r.tipo}</span>
-                        {r.requiereRevisionHumana && <span className="pill riesgo">⚠ Revisión humana</span>}
+                        {r.requiereRevisionHumana && <span className="pill riesgo"><AlertTriangle size={10} /> Revisión humana</span>}
                       </div>
                     </div>
                     <span className={'badge ' + st.cls}>{st.txt}</span>
@@ -227,7 +323,7 @@ export default function App() {
           <div className="card">
             {selected
               ? <Detalle sol={selected} vista={vista} onOpenStep={setModalStep} pending={pending} />
-              : <div className="empty"><Sol cls="sol" /><span>Selecciona una solicitud de la izquierda para ver su flujo de validación.</span></div>}
+              : <div className="empty"><FileSearch size={46} style={{ opacity: .4 }} /><span>Selecciona una solicitud de la izquierda para ver su flujo de validación.</span></div>}
           </div>
         </div>
         </>
@@ -244,13 +340,7 @@ export default function App() {
 
       {nuevaOpen && <NuevaModal onClose={() => setNuevaOpen(false)} onCrear={onCrear} onImportar={onImportar} />}
 
-      {busy && (
-        <div className="busy" role="status" aria-live="polite">
-          <div className="ring"><Sol cls="sol" /></div>
-          <div className="msg">{busy}</div>
-          <div className="agents" aria-hidden="true"><i /><i /><i /><i /><i /></div>
-        </div>
-      )}
+      {busy && <LoadingModal message={busy} />}
       {toast && <div className="toast" role="status" aria-live="polite">{toast}</div>}
     </>
   )
@@ -271,7 +361,7 @@ function Detalle({ sol, vista, onOpenStep, pending }) {
             <span className="chip">{sol.tipo}</span>
             <span className="chip">Área {sol.area}</span>
             <span>{sol.remitente}</span>
-            {sol.importadoDe === 'msg' && <span className="chip msg">📧 .msg</span>}
+            {sol.importadoDe === 'msg' && <span className="chip msg"><Mail size={11} /> .msg</span>}
           </div>
         </div>
         <span className={'badge ' + st.cls}>{st.txt}</span>
@@ -279,7 +369,7 @@ function Detalle({ sol, vista, onOpenStep, pending }) {
 
       {sol.requiereRevisionHumana && (
         <div className="riesgo-banner">
-          <span className="ic" aria-hidden="true">⚠</span>
+          <span className="ic" aria-hidden="true"><AlertTriangle size={18} /></span>
           <span><b>Requiere revisión humana obligatoria</b>Clasificada como «{sol.tipoRiesgo}». No se auto-aprueba en los pasos de IA.</span>
         </div>
       )}
@@ -310,7 +400,7 @@ function Detalle({ sol, vista, onOpenStep, pending }) {
                   onKeyDown={ev => { if (clickable && (ev.key === 'Enter' || ev.key === ' ')) { ev.preventDefault(); onOpenStep(s.n) } }}>
                   {isWorking && <span className="box-spin" aria-hidden="true" />}
                   <div className="num">{s.n}</div>
-                  <div className="ic" aria-hidden="true">{s.ic}</div>
+                  <div className="ic" aria-hidden="true"><s.Ic size={20} /></div>
                   <div className="lbl">{s.lbl}</div>
                   <div className="st">{isWorking ? 'Procesando…' : ST_TXT[estado]}</div>
                 </div>
@@ -352,7 +442,7 @@ function Modal({ title, chip, children, footer, onClose, wide }) {
     const onKey = e => { if (e.key === 'Escape') onClose() }
     document.addEventListener('keydown', onKey)
     const prevOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden' // bloquea el scroll de fondo mientras el modal está abierto
+    document.body.style.overflow = 'hidden'
     return () => { document.removeEventListener('keydown', onKey); document.body.style.overflow = prevOverflow }
   }, [onClose])
   return (
@@ -398,7 +488,7 @@ function StepModal({ sol, step, vista, onClose, actions }) {
       <div className="kv"><b>Tipo de pieza</b><span>{sol.tipo}</span></div>
       <div className="kv"><b>Asesor</b><span>{sol.asesor?.nombre || '—'} {sol.asesor?.telefono ? '· ' + sol.asesor.telefono : ''}</span></div>
       <div className="kv"><b>Contenido recibido</b><span>{sol.contenidoOriginal}</span></div>
-      {sol.requiereRevisionHumana && <div className="note bad">⚠ Clasificada como <b>{sol.tipoRiesgo}</b>: requiere revisión humana obligatoria.</div>}
+      {sol.requiereRevisionHumana && <div className="note bad">Clasificada como <b>{sol.tipoRiesgo}</b>: requiere revisión humana obligatoria.</div>}
     </Modal>
   )
 
@@ -419,9 +509,11 @@ function StepModal({ sol, step, vista, onClose, actions }) {
           {own2 && <button className="btn warn" onClick={() => actions.onRevalidar2(sol.id, txt2)}>Re-validar con IA</button>}
           <button className="btn primary" onClick={() => actions.onAceptar2(sol.id)}>Aceptar cambio y continuar</button>
         </> : <button className="btn ghost" onClick={onClose}>Cerrar</button>}>
-        <RoleTip>{vista === 'sol'
-          ? '✍ Como SOLICITANTE: revisa la propuesta del agente y decide. Acepta el cambio o escribe tu propia versión para re-validar.'
-          : '👁 Vista CX: monitoreo. La acción de aceptar/editar la realiza el área solicitante.'}</RoleTip>
+        <RoleTip>
+          {vista === 'sol'
+            ? <><PenLine size={13} style={{ marginRight: 5 }} />Como SOLICITANTE: revisa la propuesta del agente y decide. Acepta el cambio o escribe tu propia versión para re-validar.</>
+            : <><Eye size={13} style={{ marginRight: 5 }} />Vista CX: monitoreo. La acción de aceptar/editar la realiza el área solicitante.</>}
+        </RoleTip>
         <div className="note bad"><b>El agente detectó observaciones en la redacción:</b>
           <ul className="chk">{(fb.fallos || []).map((f, i) => <li key={i}>{f}</li>)}</ul>
           {(fb.principios || []).length > 0 && <div style={{ fontSize: 12, color: 'var(--gray-d)' }}>Principios afectados: {fb.principios.join(' · ')}</div>}
@@ -441,7 +533,6 @@ function StepModal({ sol, step, vista, onClose, actions }) {
   // ---- PASO 3 ----
   if (step === 3) {
     const cdn = (sol.preview && sol.preview.imagenesCdn) || []
-    // Sin imágenes validadas: si el correo traía imágenes, muéstralas igual (galería de las detectadas).
     if (!sol.imagenes || sol.imagenes.length === 0) {
       if (cdn.length) return (
         <Modal title="Paso 3 · Imágenes detectadas en el correo" chip={chip} onClose={onClose}
@@ -467,9 +558,11 @@ function StepModal({ sol, step, vista, onClose, actions }) {
     return (
       <Modal title="Paso 3 · Validación de marca / imágenes (IA)" chip={chip} onClose={onClose}
         footer={<button className="btn ghost" onClick={onClose}>Cerrar</button>}>
-        <RoleTip>{vista === 'sol'
-          ? '✍ Como SOLICITANTE: revisa cada imagen. Si hay observaciones, sube una nueva versión y el agente la validará.'
-          : '👁 Vista CX: monitoreo. El reemplazo de imágenes lo hace el área solicitante.'}</RoleTip>
+        <RoleTip>
+          {vista === 'sol'
+            ? <><PenLine size={13} style={{ marginRight: 5 }} />Como SOLICITANTE: revisa cada imagen. Si hay observaciones, sube una nueva versión y el agente la validará.</>
+            : <><Eye size={13} style={{ marginRight: 5 }} />Vista CX: monitoreo. El reemplazo de imágenes lo hace el área solicitante.</>}
+        </RoleTip>
         <div className={'note' + (allOk ? ' ok' : ' bad')}>El agente comparó cada imagen contra las referencias de branding (logo, colores institucionales, proporciones).</div>
         <div className="img-row">
           {sol.imagenes.map((im, idx) => {
@@ -478,8 +571,8 @@ function StepModal({ sol, step, vista, onClose, actions }) {
               <div key={idx} className={'img-card ' + (im.ok ? 'ok' : 'bad')}>
                 <div className="img-thumb">{(im.url || fb)
                   ? <img src={im.url || fb} alt={im.nombre} loading="lazy"
-                    onError={ev => { if (fb && ev.target.src !== fb) ev.target.src = fb; else { ev.target.style.display = 'none'; ev.target.insertAdjacentText('afterend', '🖼 ' + (im.nombre || '')) } }} />
-                  : <span>🖼 {im.nombre}</span>}</div>
+                    onError={ev => { if (fb && ev.target.src !== fb) ev.target.src = fb; else { ev.target.style.display = 'none'; ev.target.insertAdjacentText('afterend', im.nombre || '') } }} />
+                  : <span>{im.nombre}</span>}</div>
                 <div className="res">{im.ok ? '✔' : '✖'} {im.resultado}</div>
                 <div style={{ fontSize: 11, color: 'var(--gray-d)', marginTop: 4 }}>{im.detalle}</div>
                 {!im.ok && (im.sugerencias || []).length > 0 && (
@@ -519,9 +612,11 @@ function StepModal({ sol, step, vista, onClose, actions }) {
           {own4 && <button className="btn warn" onClick={() => actions.onRevalidar4(sol.id, txt4)}>Re-validar con Legal</button>}
           <button className="btn primary" onClick={() => actions.onAceptar4(sol.id)}>Aceptar ajuste y continuar</button>
         </> : <button className="btn ghost" onClick={onClose}>Cerrar</button>}>
-        <RoleTip>{vista === 'sol'
-          ? '✍ Como SOLICITANTE: revisa las observaciones legales. Acepta el ajuste sugerido o escribe tu propia versión para re-validar.'
-          : '👁 Vista CX: monitoreo. El ajuste por temas legales lo realiza el área solicitante.'}</RoleTip>
+        <RoleTip>
+          {vista === 'sol'
+            ? <><PenLine size={13} style={{ marginRight: 5 }} />Como SOLICITANTE: revisa las observaciones legales. Acepta el ajuste sugerido o escribe tu propia versión para re-validar.</>
+            : <><Eye size={13} style={{ marginRight: 5 }} />Vista CX: monitoreo. El ajuste por temas legales lo realiza el área solicitante.</>}
+        </RoleTip>
         <div className="note bad"><b>Legal y Cumplimiento detectó observaciones:</b>
           <ul className="chk">{(lg.observaciones || []).map((o, i) => <li key={i}>{o}</li>)}</ul>
           {(lg.sugerencias || []).length > 0 && <div style={{ fontSize: 12, color: 'var(--gray-d)' }}>Sugerencias: {lg.sugerencias.join(' · ')}</div>}
@@ -544,7 +639,9 @@ function StepModal({ sol, step, vista, onClose, actions }) {
       const est = sol.estados['paso' + s.n]
       return (
         <div key={i} className="summary-line">
-          <span className={'dot ' + (est === 'ok' ? 'ok' : est)}>{est === 'ok' ? '✓' : est === 'obs' ? '!' : est === 'wait' ? '⏳' : '·'}</span>
+          <span className={'dot ' + (est === 'ok' ? 'ok' : est)}>
+            {est === 'ok' ? '✓' : est === 'obs' ? '!' : est === 'wait' ? <Clock size={10} strokeWidth={3} /> : '·'}
+          </span>
           <b style={{ minWidth: 220 }}>{s.lbl}</b><span>{ST_TXT[est]}</span>
         </div>
       )
@@ -558,7 +655,7 @@ function StepModal({ sol, step, vista, onClose, actions }) {
         <div className="kv"><b>Área</b><span>{sol.area}</span></div>
         <div className="kv"><b>Versión final</b><span>{sol.contenidoActual}</span></div>
         <div style={{ marginTop: 12 }}>{summary}</div>
-        {sol.requiereRevisionHumana && <div className="note bad" style={{ marginTop: 12 }}>⚠ Requiere revisión humana obligatoria ({sol.tipoRiesgo}).</div>}
+        {sol.requiereRevisionHumana && <div className="note bad" style={{ marginTop: 12 }}>Requiere revisión humana obligatoria ({sol.tipoRiesgo}).</div>}
       </>
     )
     if (vista === 'cx') {
@@ -569,13 +666,12 @@ function StepModal({ sol, step, vista, onClose, actions }) {
             <button className="btn ghost" onClick={onClose}>Cerrar</button>
             <button className="btn primary" onClick={() => actions.onAprobar(sol.id)}>Aprobar solicitud</button>
           </>}>
-          <RoleTip>👁 Vista CX: aquí es donde realmente intervienes. Revisa el brief y da el visto bueno final.</RoleTip>
+          <RoleTip><Eye size={13} style={{ marginRight: 5 }} />Vista CX: aquí es donde realmente intervienes. Revisa el brief y da el visto bueno final.</RoleTip>
           {brief}
         </Modal>
       )
     }
-    // vista solicitante
-    if (sol.publicado) return <Modal title="Paso 5 · Publicado" chip={chip} onClose={onClose} footer={<button className="btn ghost" onClick={onClose}>Cerrar</button>}>{brief}<div className="note ok">🚀 Comunicación publicada / enviada al cliente.</div></Modal>
+    if (sol.publicado) return <Modal title="Paso 5 · Publicado" chip={chip} onClose={onClose} footer={<button className="btn ghost" onClick={onClose}>Cerrar</button>}>{brief}<div className="note ok">Comunicación publicada / enviada al cliente.</div></Modal>
     if (sol.aprobadoCX) return (
       <Modal title="Paso 5 · Aprobado · Publicar" chip={chip} onClose={onClose}
         footer={<>
@@ -583,7 +679,7 @@ function StepModal({ sol, step, vista, onClose, actions }) {
           <button className="btn primary" onClick={() => actions.onPublicar(sol.id)}>Publicar comunicación</button>
         </>}>{brief}<div className="note ok">✔ CX aprobó tu solicitud. Ya puedes publicarla.</div></Modal>
     )
-    return <Modal title="Paso 5 · Esperando aprobación CX" chip={chip} onClose={onClose} footer={<button className="btn ghost" onClick={onClose}>Cerrar</button>}>{brief}<div className="note">⏳ Tu solicitud está completa y a la espera de la aprobación del equipo CX.</div></Modal>
+    return <Modal title="Paso 5 · Esperando aprobación CX" chip={chip} onClose={onClose} footer={<button className="btn ghost" onClick={onClose}>Cerrar</button>}>{brief}<div className="note">Tu solicitud está completa y a la espera de la aprobación del equipo CX.</div></Modal>
   }
 
   return null
@@ -593,7 +689,6 @@ function StepModal({ sol, step, vista, onClose, actions }) {
 //  Vista previa de la pieza — mockups realistas por canal
 // ============================================================
 
-// Diff de palabras (LCS) para resaltar el antes/después de la copy del agente.
 function tokenize(s) { return (s || '').split(/(\s+)/) }
 function wordDiff(a, b) {
   const A = tokenize(a), B = tokenize(b), n = A.length, m = B.length
@@ -624,7 +719,6 @@ function chan(tipo) {
 const cleanName = s => (s || '').replace(/<[^>]*>/g, '').trim() || 'Cliente Mibanco'
 const sinAsunto = s => (s || '').replace(/^\s*(test|fwd|re)\s*:\s*/i, '').trim()
 
-// Renderiza el cuerpo de texto: saluda en grande, párrafos y placeholders {Nombre}/{Asesor} como chips.
 function bodyLines(texto, asesor) {
   const raw = (texto || '').replace(/\{Asesor\}/g, asesor?.nombre ? asesor.nombre : '{Asesor}')
   const lines = raw.split(/\n+/).map(s => s.trim()).filter(Boolean)
@@ -637,7 +731,6 @@ function Txt({ s }) {
   return <>{parts.map((p, i) => /^\{[^}]+\}$/.test(p) ? <span key={i} className="ph">{p}</span> : <span key={i}>{p}</span>)}</>
 }
 
-// Cuerpo de texto reutilizable: saludo grande + párrafos, o diff verde si hay diffFrom.
 function Body({ texto, diffFrom, asesor, greet = true }) {
   if (diffFrom != null) return <div className="copy-diff"><DiffInline antes={diffFrom} despues={texto || ''} only="despues" /></div>
   const { greeting, paras } = bodyLines(texto, asesor)
@@ -648,7 +741,6 @@ function Body({ texto, diffFrom, asesor, greet = true }) {
   </>
 }
 
-// Banner que carga del proxy y cae al CDN público si el server no pudo descargarlo.
 function Banner({ pv }) {
   const src = pv.bannerUrl || pv.bannerUrlCdn
   if (!src) return null
@@ -657,7 +749,6 @@ function Banner({ pv }) {
     onError={e => { if (fb && e.target.src !== fb) e.target.src = fb; else e.target.closest('.em-banner').style.display = 'none' }} /></div>
 }
 
-// Mockup de correo branded (cabecera tipo cliente + banner real + copy).
 function EmailMock({ sol, texto, diffFrom }) {
   const pv = sol.preview || {}
   const asunto = sinAsunto(pv.asunto || sol.asunto || sol.titulo)
@@ -692,7 +783,6 @@ function EmailMock({ sol, texto, diffFrom }) {
   )
 }
 
-// Teléfono genérico para SMS / WhatsApp / Push.
 function Phone({ children, kind }) {
   return <div className={'phone ' + kind}><span className="notch" /><div className="screen">{children}</div></div>
 }
@@ -749,8 +839,8 @@ function SpeechMock({ sol, texto, diffFrom }) {
   const t = texto ?? sol.contenidoActual
   return (
     <div className="speech-mock">
-      <div className="speech-head"><span className="speech-ic">🎧</span>Guión para asesor · llamada</div>
-      <div className="speech-bubble">“{diffFrom != null ? <DiffInline antes={diffFrom} despues={t || ''} only="despues" /> : <Txt s={t} />}”</div>
+      <div className="speech-head"><span className="speech-ic"><Headphones size={16} /></span>Guión para asesor · llamada</div>
+      <div className="speech-bubble">"{diffFrom != null ? <DiffInline antes={diffFrom} despues={t || ''} only="despues" /> : <Txt s={t} />}"</div>
     </div>
   )
 }
@@ -765,7 +855,6 @@ function DevicePreview({ sol, texto, diffFrom = null }) {
   return <SmsMock sol={sol} texto={texto} diffFrom={diffFrom} />
 }
 
-// HTML real del correo, renderizado inerte en un iframe sandbox (sin scripts).
 function EmailRealPreview({ html }) {
   if (!html) return <div className="prev-empty">No hay HTML original del correo.</div>
   return (
@@ -777,7 +866,6 @@ function EmailRealPreview({ html }) {
   )
 }
 
-// Recolecta los nodos de texto del correo (ignora style/script/etc.) para poder ubicar frases.
 function collectTextNodes(node, out, skip) {
   for (let c = node.firstChild; c; c = c.nextSibling) {
     if (c.nodeType === 3) { if (c.nodeValue) out.push(c) }
@@ -785,9 +873,6 @@ function collectTextNodes(node, out, skip) {
   }
 }
 
-// Inyecta las correcciones de la IA SOBRE el HTML real del correo: localiza cada frase
-// original (del word-diff) dentro del texto renderizado y la reemplaza por la versión
-// corregida, resaltada en verde. Conserva imágenes y layout intactos. Devuelve nº aplicado.
 function applyHtmlDiff(doc, antes, despues) {
   try {
     const root = doc.body
@@ -799,8 +884,6 @@ function applyHtmlDiff(doc, antes, despues) {
     let s = ''
     for (const n of textNodes) { nodes.push({ node: n, start: s.length, len: n.nodeValue.length }); s += n.nodeValue }
     if (!s) return 0
-    // Texto normalizado (colapsa espacios) + mapa de vuelta a los índices reales — el cuerpo
-    // del .msg (texto plano) trae otros espaciados que el HTML, así la búsqueda es robusta.
     let norm = '', map = [], prevSpace = false
     for (let i = 0; i < s.length; i++) {
       const c = s[i]
@@ -810,9 +893,8 @@ function applyHtmlDiff(doc, antes, despues) {
       } else { norm += c; map.push(i); prevSpace = false }
     }
     const hay = norm.toLowerCase()
-    map.push(s.length)                               // centinela para offsets al final del texto
+    map.push(s.length)
     const hayLen = norm.length
-    // Agrupa el word-diff en corridas consecutivas del mismo tipo (same / del / add).
     const ops = wordDiff(antes, despues)
     const runs = []
     for (const o of ops) {
@@ -820,8 +902,6 @@ function applyHtmlDiff(doc, antes, despues) {
       if (last && last.k === o.k) last.t += o.t; else runs.push({ k: o.k, t: o.t })
     }
     const clean = t => t.replace(/\s+/g, ' ').trim()
-    // Recorre las corridas con un cursor sobre el texto renderizado y arma las ediciones:
-    // reemplazos (del+add), borrados (del) e inserciones puras (add) en su posición exacta.
     const edits = []
     let cursor = 0
     for (let i = 0; i < runs.length; i++) {
@@ -837,14 +917,14 @@ function applyHtmlDiff(doc, antes, despues) {
         if (idx < 0) continue
         const endN = idx + p.length
         const next = runs[i + 1]
-        if (next && next.k === 'add' && clean(next.t)) {        // reemplazo: frase original -> corregida
+        if (next && next.k === 'add' && clean(next.t)) {
           edits.push({ startS: map[idx], endS: map[endN - 1] + 1, text: clean(next.t), hl: 'add' })
           i++
-        } else {                                                // borrado puro (tachado)
+        } else {
           edits.push({ startS: map[idx], endS: map[endN - 1] + 1, text: s.slice(map[idx], map[endN - 1] + 1), hl: 'del' })
         }
         cursor = endN
-      } else if (run.k === 'add') {                             // inserción pura, en la posición del cursor
+      } else if (run.k === 'add') {
         if (!p) continue
         const at = map[Math.min(cursor, hayLen)]
         edits.push({ startS: at, endS: at, text: p, hl: 'add', insert: true })
@@ -852,7 +932,7 @@ function applyHtmlDiff(doc, antes, despues) {
     }
     if (!edits.length) return 0
     const locate = g => { for (let k = 0; k < nodes.length; k++) { const nn = nodes[k]; if (g >= nn.start && g <= nn.start + nn.len) return k } return -1 }
-    edits.sort((a, b) => b.startS - a.startS)        // aplica de derecha a izquierda: mantiene válidos los offsets
+    edits.sort((a, b) => b.startS - a.startS)
     let applied = 0
     for (const r of edits) {
       const ki = locate(r.startS), kj = locate(r.endS)
@@ -883,7 +963,6 @@ function applyHtmlDiff(doc, antes, despues) {
   } catch (_) { return 0 }
 }
 
-// "Después" sobre el correo real: mismo HTML (todas las imágenes) con la corrección resaltada.
 function EmailRealDiff({ html, antes, despues }) {
   if (!html) return <div className="prev-empty">No hay HTML original del correo.</div>
   return (
@@ -905,9 +984,6 @@ function EmailRealDiff({ html, antes, despues }) {
   )
 }
 
-// Panel de preview. Para correos importados de .msg muestra SIEMPRE el correo original
-// (HTML real, fiel a lo recibido). El mockup por canal solo se usa donde no hay HTML real:
-// canales que no son email (SMS/WhatsApp/Push/Carta/Speech) o emails escritos a mano.
 function PreviewPanel({ sol, texto, defaultOpen = true }) {
   const esEmail = chan(sol.tipo) === 'email'
   const usarHtmlReal = esEmail && !!sol.correoHtml
@@ -915,7 +991,7 @@ function PreviewPanel({ sol, texto, defaultOpen = true }) {
   return (
     <div className="prev-panel">
       <div className="prev-head">
-        <span className="prev-t">👁 {usarHtmlReal ? 'Correo original recibido' : 'Vista previa de la pieza'}</span>
+        <span className="prev-t"><Eye size={14} style={{ marginRight: 5 }} />{usarHtmlReal ? 'Correo original recibido' : 'Vista previa de la pieza'}</span>
         <div className="prev-right">
           <button className="prev-collapse" onClick={() => setOpen(o => !o)} aria-expanded={open}>{open ? 'Ocultar' : 'Mostrar'}</button>
         </div>
@@ -929,7 +1005,6 @@ function PreviewPanel({ sol, texto, defaultOpen = true }) {
   )
 }
 
-// Diff inline: resalta lo añadido (verde Mibanco) y lo eliminado (tachado), conservando saltos de línea.
 function DiffInline({ antes, despues, only }) {
   const d = wordDiff(antes, despues).filter(x =>
     only === 'despues' ? x.k !== 'del' : only === 'antes' ? x.k !== 'add' : true)
@@ -941,12 +1016,11 @@ function DiffInline({ antes, despues, only }) {
   })}</>
 }
 
-// Antes/Después realista: diff héroe en verde Mibanco + dos mockups en contexto.
 function BeforeAfter({ sol, antes, despues, lblAntes = 'Versión actual', lblDespues = 'Propuesta del agente' }) {
   const [verMock, setVerMock] = useState(true)
   const cambio = (antes || '').trim() !== (despues || '').trim()
   const adds = wordDiff(antes, despues).filter(x => x.k === 'add' && x.t.trim()).length
-  const esEmailHtml = chan(sol.tipo) === 'email' && !!sol.correoHtml   // usar el correo real, no el mockup
+  const esEmailHtml = chan(sol.tipo) === 'email' && !!sol.correoHtml
   return (
     <div className="ba">
       <div className="ba-hero">
@@ -975,14 +1049,12 @@ function BeforeAfter({ sol, antes, despues, lblAntes = 'Versión actual', lblDes
         {verMock ? '▾ Ocultar' : '▸ Ver'} cómo se verá la pieza (antes → después)
       </button>
       {verMock && (esEmailHtml ? (
-        // Email .msg: el correo real (todas las imágenes y layout) — original vs. corregido por IA.
         <div className="ba-stack">
           <div className="ba-col"><div className="ba-tag antes">● {lblAntes}</div><div className="ba-stage"><EmailRealPreview html={sol.correoHtml} /></div></div>
           <div className="ba-arrow" aria-hidden="true">↓</div>
           <div className="ba-col"><div className="ba-tag despues">✓ {lblDespues}</div><div className="ba-stage despues"><EmailRealDiff html={sol.correoHtml} antes={antes} despues={despues} /></div></div>
         </div>
       ) : (
-        // Otros canales (o email escrito a mano sin HTML): mockup por canal.
         <div className="ba-grid">
           <div className="ba-col"><div className="ba-tag antes">● {lblAntes}</div><div className="ba-stage"><DevicePreview sol={sol} texto={antes} /></div></div>
           <div className="ba-arrow" aria-hidden="true">→</div>
@@ -994,8 +1066,8 @@ function BeforeAfter({ sol, antes, despues, lblAntes = 'Versión actual', lblDes
 }
 
 function NuevaModal({ onClose, onCrear, onImportar }) {
-  const AREA = 'Productos' // el solicitante pertenece al Área Productos
-  const [modo, setModo] = useState('escribir') // 'escribir' | 'msg'
+  const AREA = 'Productos'
+  const [modo, setModo] = useState('escribir')
   const [tipo, setTipo] = useState('SMS')
   const [titulo, setTitulo] = useState('')
   const [remitente, setRemitente] = useState('')
@@ -1038,8 +1110,12 @@ function NuevaModal({ onClose, onCrear, onImportar }) {
         : <select value="Email" disabled><option>Email (se detecta automáticamente del .msg)</option></select>}
 
       <div className="segmented">
-        <button className={modo === 'escribir' ? 'active' : ''} onClick={() => setModo('escribir')}>✍️ Escribir mensaje</button>
-        <button className={modo === 'msg' ? 'active' : ''} onClick={() => setModo('msg')}>📧 Adjuntar correo (.msg)</button>
+        <button className={modo === 'escribir' ? 'active' : ''} onClick={() => setModo('escribir')}>
+          <PenLine size={14} style={{ marginRight: 5 }} />Escribir mensaje
+        </button>
+        <button className={modo === 'msg' ? 'active' : ''} onClick={() => setModo('msg')}>
+          <Mail size={14} style={{ marginRight: 5 }} />Adjuntar correo (.msg)
+        </button>
       </div>
 
       {modo === 'escribir' ? (
@@ -1063,8 +1139,8 @@ function NuevaModal({ onClose, onCrear, onImportar }) {
           <label className="fld">Correo de Outlook (.msg)</label>
           <label className="msgdrop" style={{ display: 'block', cursor: 'pointer' }}>
             {msgFile
-              ? <span style={{ color: 'var(--green-d)', fontWeight: 700 }}>📎 {msgFile.name}</span>
-              : <>📧 Haz clic para seleccionar un archivo <b>.msg</b><br /><span style={{ fontSize: 11 }}>Se extraerá asunto, remitente, cuerpo e imágenes (banners) del correo.</span></>}
+              ? <span style={{ color: 'var(--green-d)', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6 }}><Mail size={14} /> {msgFile.name}</span>
+              : <><Mail size={16} style={{ marginRight: 6, verticalAlign: 'middle' }} />Haz clic para seleccionar un archivo <b>.msg</b><br /><span style={{ fontSize: 11 }}>Se extraerá asunto, remitente, cuerpo e imágenes (banners) del correo.</span></>}
             <input type="file" accept=".msg" style={{ display: 'none' }} onChange={e => setMsgFile(e.target.files[0] || null)} />
           </label>
         </>
@@ -1077,18 +1153,18 @@ function NuevaModal({ onClose, onCrear, onImportar }) {
 //  Dashboard — KPIs y gráficos del avance (derivados de la lista)
 // ============================================================
 
-// Paleta (hex literal: SVG no resuelve var() en atributos de presentación).
+// Paleta oficial Mibanco (hex literal: SVG no resuelve var() en atributos de presentación).
 const DC = {
-  brand: '#009639', brand300: '#3FBC6F', sun: '#F8D000',
-  purple: '#7E57C2', info: '#2F6FB0', gray: '#C7CDD3', danger: '#C0392B', track: '#EEF1F3',
+  brand: '#00964B', brand300: '#71B74C', sun: '#FFD100',
+  obs: '#E63946', info: '#2563EB', wait: '#CA7C2F',
+  gray: '#9CA3AF', danger: '#E63946', track: '#EEF1F3',
 }
-// Orden y metadatos del estado macro del pipeline.
 const ESTADO_META = [
-  { k: 'pub', lbl: 'Publicadas', color: DC.brand, ic: '🚀' },
-  { k: 'aprob', lbl: 'Aprobadas CX', color: DC.brand300, ic: '✅' },
-  { k: 'wait', lbl: 'Esperando CX', color: DC.purple, ic: '⏳' },
-  { k: 'obs', lbl: 'Con observaciones', color: DC.sun, ic: '🟡' },
-  { k: 'proc', lbl: 'En proceso', color: DC.info, ic: '⚙️' },
+  { k: 'pub', lbl: 'Publicadas', color: '#00964B' },
+  { k: 'aprob', lbl: 'Aprobadas CX', color: '#71B74C' },
+  { k: 'wait', lbl: 'Esperando CX', color: '#CA7C2F' },
+  { k: 'obs', lbl: 'Con observaciones', color: '#E63946' },
+  { k: 'proc', lbl: 'En proceso', color: '#2563EB' },
 ]
 
 function groupCount(items, keyFn) {
@@ -1100,7 +1176,6 @@ function groupCount(items, keyFn) {
   return [...m.entries()].map(([k, v]) => ({ k, v })).sort((a, b) => b.v - a.v)
 }
 
-// Anillo de progreso (1 valor) en SVG.
 function Ring({ pct, size = 104, stroke = 11, color = DC.brand, label }) {
   const r = (size - stroke) / 2
   const c = 2 * Math.PI * r
@@ -1119,7 +1194,6 @@ function Ring({ pct, size = 104, stroke = 11, color = DC.brand, label }) {
   )
 }
 
-// Dona de distribución en SVG + leyenda (la pinta el contenedor).
 function Donut({ segments, size = 176, stroke = 28, centerTop, centerBottom }) {
   const total = segments.reduce((a, s) => a + s.value, 0)
   const r = (size - stroke) / 2
@@ -1146,7 +1220,6 @@ function Donut({ segments, size = 176, stroke = 28, centerTop, centerBottom }) {
   )
 }
 
-// Barra de composición horizontal: longitud = total/max, segmentada por estado.
 function CompBar({ segments, total, max }) {
   const fillPct = max ? Math.max(6, (total / max) * 100) : 0
   return (
@@ -1163,12 +1236,10 @@ function CompBar({ segments, total, max }) {
 function Dashboard({ lista, cfg, onRefresh, onVerCX }) {
   const total = lista.length
 
-  // Conteo por estado macro
   const macro = { pub: 0, aprob: 0, wait: 0, obs: 0, proc: 0 }
   lista.forEach(r => { macro[macroEstado(r)]++ })
   const segEstado = ESTADO_META.map(m => ({ ...m, value: macro[m.k] }))
 
-  // Avance global = promedio de pasos completados (ok) sobre 5
   const pasosOk = lista.reduce((a, r) => a + Object.values(r.estados || {}).filter(e => e === 'ok').length, 0)
   const avgPct = total ? Math.round((pasosOk / (total * 5)) * 100) : 0
 
@@ -1178,13 +1249,11 @@ function Dashboard({ lista, cfg, onRefresh, onVerCX }) {
   const tasaAprob = total ? Math.round((aprobadas / total) * 100) : 0
   const revHumana = lista.filter(r => r.requiereRevisionHumana).length
 
-  // Embudo por etapa: cuántas solicitudes completaron (ok) cada paso
   const etapas = STEPS.map(s => ({
     ...s,
     ok: lista.filter(r => r.estados['paso' + s.n] === 'ok').length,
   }))
 
-  // Distribución por área (segmentada por estado, para ver el avance de cada área)
   const areas = groupCount(lista, r => r.area)
   const maxArea = Math.max(1, ...areas.map(a => a.v))
   const areaSegs = (area) => ESTADO_META.map(m => ({
@@ -1192,28 +1261,26 @@ function Dashboard({ lista, cfg, onRefresh, onVerCX }) {
     value: lista.filter(r => r.area === area && macroEstado(r) === m.k).length,
   }))
 
-  // Distribución por tipo de pieza (canal)
   const tipos = groupCount(lista, r => r.tipo)
   const maxTipo = Math.max(1, ...tipos.map(t => t.v))
 
-  // Solicitudes que requieren atención (observaciones o esperando CX)
   const atencion = lista
     .filter(r => ['obs', 'wait'].includes(macroEstado(r)))
     .sort((a, b) => (macroEstado(a) === 'obs' ? 0 : 1) - (macroEstado(b) === 'obs' ? 0 : 1))
 
   if (total === 0) return (
-    <div className="empty"><Sol cls="sol" /><span>Aún no hay solicitudes para graficar. Crea una desde la Vista Solicitante.</span></div>
+    <div className="empty"><FileSearch size={46} style={{ opacity: .4 }} /><span>Aún no hay solicitudes para graficar. Crea una desde la Vista Solicitante.</span></div>
   )
 
   return (
     <div className="dash">
       <div className="dash-head">
         <div>
-          <h2>📊 Dashboard de avance</h2>
+          <h2>Dashboard de avance</h2>
           <p>Métricas en vivo del flujo de validación · {total} solicitud{total === 1 ? '' : 'es'} de todas las áreas</p>
         </div>
         <div className="dash-head-right">
-          {cfg && <span className="envtag dark"><span className="live"></span>🧠 {cfg.modelo?.model}</span>}
+          {cfg && <span className="envtag dark"><span className="live"></span>{cfg.modelo?.model}</span>}
           <button className="btn ghost dash-refresh" onClick={onRefresh} title="Actualizar métricas">↻ Actualizar</button>
         </div>
       </div>
@@ -1221,7 +1288,7 @@ function Dashboard({ lista, cfg, onRefresh, onVerCX }) {
       {/* ---- KPIs ---- */}
       <div className="dash-kpis">
         <div className="dk">
-          <div className="dk-ic" style={{ background: 'var(--brand-50)', color: 'var(--brand-700)' }}>📋</div>
+          <div className="dk-ic" style={{ background: '#EAF5EE', color: '#00964B' }}><FileText size={22} /></div>
           <div className="dk-body"><div className="dk-big">{total}</div><div className="dk-lbl">Solicitudes totales</div></div>
         </div>
         <div className="dk">
@@ -1229,15 +1296,15 @@ function Dashboard({ lista, cfg, onRefresh, onVerCX }) {
           <div className="dk-body"><div className="dk-lbl">Avance global</div><div className="dk-sub">{pasosOk} de {total * 5} pasos validados</div></div>
         </div>
         <div className="dk">
-          <div className="dk-ic" style={{ background: 'var(--brand-50)', color: 'var(--brand-700)' }}>✅</div>
+          <div className="dk-ic" style={{ background: '#EAF5EE', color: '#00964B' }}><CheckSquare size={22} /></div>
           <div className="dk-body"><div className="dk-big">{aprobadas}</div><div className="dk-lbl">Aprobadas / publicadas</div><div className="dk-sub">{tasaAprob}% del total · {publicadas} publicadas</div></div>
         </div>
         <div className="dk">
-          <div className="dk-ic" style={{ background: 'var(--sun-50)', color: 'var(--warning)' }}>⚠️</div>
+          <div className="dk-ic" style={{ background: '#FEE8E8', color: '#E63946' }}><AlertTriangle size={22} /></div>
           <div className="dk-body"><div className="dk-big">{pendientes}</div><div className="dk-lbl">Requieren acción</div><div className="dk-sub">{macro.obs} con observaciones · {macro.wait} esperando CX</div></div>
         </div>
         <div className="dk">
-          <div className="dk-ic" style={{ background: 'var(--danger-50)', color: 'var(--danger)' }}>🛡️</div>
+          <div className="dk-ic" style={{ background: '#EAF0FB', color: '#2563EB' }}><UserCheck size={22} /></div>
           <div className="dk-body"><div className="dk-big">{revHumana}</div><div className="dk-lbl">Revisión humana</div><div className="dk-sub">clasificadas como riesgo</div></div>
         </div>
       </div>
@@ -1268,7 +1335,10 @@ function Dashboard({ lista, cfg, onRefresh, onVerCX }) {
               const pct = total ? Math.round((s.ok / total) * 100) : 0
               return (
                 <div key={s.n} className="etapa-row">
-                  <div className="etapa-lbl"><span className="etapa-ic">{s.ic}</span><span>{s.n}. {s.lbl}</span></div>
+                  <div className="etapa-lbl">
+                    <span className="etapa-ic"><s.Ic size={16} /></span>
+                    <span>{s.n}. {s.lbl}</span>
+                  </div>
                   <div className="etapa-track"><div className="etapa-fill" style={{ width: pct + '%' }} /></div>
                   <div className="etapa-val">{s.ok}/{total}</div>
                 </div>
@@ -1331,7 +1401,7 @@ function Dashboard({ lista, cfg, onRefresh, onVerCX }) {
                   <span className="attn-dot" style={{ background: meta?.color }} />
                   <div className="attn-meta">
                     <div className="attn-ttl">{r.titulo}</div>
-                    <div className="attn-sub">{r.id} · {r.area} · {r.tipo}{r.requiereRevisionHumana ? ' · ⚠ revisión humana' : ''}</div>
+                    <div className="attn-sub">{r.id} · {r.area} · {r.tipo}{r.requiereRevisionHumana ? ' · revisión humana' : ''}</div>
                   </div>
                   <div className="attn-prog"><div className="attn-prog-track"><div className="attn-prog-fill" style={{ width: (done / 5 * 100) + '%' }} /></div><span>{done}/5</span></div>
                   <span className="attn-badge" style={{ background: meta?.color }}>{meta?.lbl}</span>
