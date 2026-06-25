@@ -48,4 +48,6 @@ export const api = {
   aceptarPaso4: (id) => jpost(`/solicitudes/${id}/paso4/aceptar`),
   aprobar: (id) => jpost(`/solicitudes/${id}/aprobar`),
   publicar: (id) => jpost(`/solicitudes/${id}/publicar`),
+  rechazar: (id, mensaje) => jpost(`/solicitudes/${id}/rechazar`, { mensaje }),
+  generarConsejoRechazo: (id) => jpost(`/solicitudes/${id}/consejo_rechazo`),
 }

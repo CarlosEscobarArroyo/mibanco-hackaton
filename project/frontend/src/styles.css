@@ -122,12 +122,12 @@ header .sub{opacity:.9;font-size:12.5px;font-weight:600;padding-left:14px;margin
 .pill.riesgo{background:var(--danger-50);color:var(--danger)}
 .badge{font-size:10.5px;font-weight:800;padding:5px 11px;border-radius:var(--radius-pill);white-space:nowrap;letter-spacing:.2px}
 .b-proc{background:var(--gray-l);color:var(--gray-d)}
-.b-obs{background:var(--sun-50);color:var(--warning)}
+.b-obs{background:#FDECEA;color:#C0392B}
 .b-ok{background:var(--brand-50);color:var(--brand-700)}
 .b-pub{background:var(--brand);color:#fff}
 
 .sdot.b-proc,.dotc.b-proc{background:var(--gray)}
-.sdot.b-obs,.dotc.b-obs{background:var(--brand-sun)}
+.sdot.b-obs,.dotc.b-obs{background:#E63946}
 .sdot.b-ok,.dotc.b-ok{background:var(--success)}
 .sdot.b-pub,.dotc.b-pub{background:var(--brand)}
 
@@ -180,8 +180,8 @@ header .sub{opacity:.9;font-size:12.5px;font-weight:600;padding-left:14px;margin
 /* estados */
 .step.ok .box{border-color:var(--brand);background:var(--brand-50)}
 .step.ok .num{background:var(--brand)} .step.ok .st{color:var(--brand-700)}
-.step.obs .box{border-color:var(--brand-sun);background:var(--sun-50)}
-.step.obs .num{background:var(--brand-sun);color:var(--sun-ink)} .step.obs .st{color:var(--warning)}
+.step.obs .box{border-color:#E63946;background:#FDECEA}
+.step.obs .num{background:#E63946;color:#fff} .step.obs .st{color:#C0392B}
 .step.proc .box{border-color:var(--info);background:var(--info-50)}
 .step.proc .num{background:var(--info)} .step.proc .st{color:var(--info)}
 .step.wait .box{border-color:var(--purple);background:var(--purple-50)}
@@ -192,7 +192,7 @@ header .sub{opacity:.9;font-size:12.5px;font-weight:600;padding-left:14px;margin
 .hint{display:flex;flex-wrap:wrap;gap:8px 14px;justify-content:center;margin-top:12px}
 .hint .lg{display:inline-flex;align-items:center;gap:6px;font-size:11px;color:var(--gray-d);font-weight:700}
 .hint .lg i{width:10px;height:10px;border-radius:50%;display:inline-block}
-.lg.ok i{background:var(--brand)} .lg.obs i{background:var(--brand-sun)} .lg.proc i{background:var(--info)}
+.lg.ok i{background:var(--brand)} .lg.obs i{background:#E63946} .lg.proc i{background:var(--info)}
 .lg.wait i{background:var(--purple)} .lg.locked i{background:var(--gray)}
 
 .histbox{margin-top:18px;border-top:1px solid var(--line);padding-top:12px}
@@ -207,7 +207,7 @@ header .sub{opacity:.9;font-size:12.5px;font-weight:600;padding-left:14px;margin
 .modal .mh .mt{display:flex;align-items:center;gap:11px;min-width:0}
 .modal .mh h3{margin:0;font-size:16px;font-weight:800}
 .stepchip{flex-shrink:0;width:30px;height:30px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;background:var(--gray-l);color:var(--gray-d)}
-.stepchip.ok{background:var(--brand-50);color:var(--brand-700)} .stepchip.obs{background:var(--sun-50);color:var(--warning)}
+.stepchip.ok{background:var(--brand-50);color:var(--brand-700)} .stepchip.obs{background:#FDECEA;color:#C0392B}
 .stepchip.proc{background:var(--info-50);color:var(--info)} .stepchip.wait{background:var(--purple-50);color:#6a3fb0}
 .modal .mb{padding:20px}
 .modal .mf{padding:14px 20px;border-top:1px solid var(--line);display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;position:sticky;bottom:0;background:var(--surface)}
@@ -271,7 +271,7 @@ label.fld{display:block;font-size:12px;font-weight:800;color:var(--gray-d);margi
 /* Paso 5 resumen */
 .summary-line{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--line);font-size:13px}
 .dot{width:22px;height:22px;border-radius:50%;color:#fff;font-size:11px;display:flex;align-items:center;justify-content:center;font-weight:800;flex-shrink:0}
-.dot.ok{background:var(--brand)} .dot.obs{background:var(--brand-sun);color:var(--sun-ink)}
+.dot.ok{background:var(--brand)} .dot.obs{background:#E63946;color:#fff}
 .dot.wait{background:var(--purple)} .dot.locked{background:var(--gray)} .dot.proc{background:var(--info)}
 .brief-box{white-space:pre-wrap;font-size:13px;line-height:1.6;background:#fafdfb;border:1px solid var(--line);border-radius:var(--radius);padding:14px}
 
@@ -680,4 +680,127 @@ mark.df-del{background:#fff;color:var(--danger);text-decoration:line-through;tex
   .cbar-row{grid-template-columns:84px 1fr 30px;gap:8px}
   .etapa-row{grid-template-columns:1fr 90px 40px;gap:8px}
   .attn-prog{display:none}
+}
+
+/* ============================================================
+   Bloques de mejora adicionales
+   ============================================================ */
+
+/* BLOQUE 5 – tarjetas de estadísticas clickeables */
+.stat-active{
+  outline:2px solid var(--accentbar,var(--brand));
+  box-shadow:var(--shadow-2);
+}
+.stat-active .big{color:var(--accentbar,var(--brand))}
+.filter-indicator{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  background:var(--brand-50);border:1px solid var(--brand-100);border-radius:var(--radius);
+  padding:9px 14px;font-size:13px;color:var(--ink-soft);margin-bottom:4px;
+}
+.filter-indicator b{color:var(--brand-700)}
+.filter-clear{border:0;background:transparent;color:var(--brand-700);font-weight:800;font-size:13px;cursor:pointer;padding:0;text-decoration:underline;font-family:inherit}
+.filter-clear:hover{color:var(--brand-600)}
+
+/* BLOQUE 6 – banners de revision humana */
+.rev-humana-banner-sol{
+  display:flex;gap:11px;align-items:flex-start;background:#FEF3C7;
+  border-left:4px solid #F59E0B;border-radius:var(--radius);
+  padding:12px 14px;font-size:13px;color:#92400E;margin:16px 0 0;
+}
+.rev-humana-banner-sol b{display:block;font-size:13.5px;margin-bottom:2px}
+.rev-humana-badge{
+  display:inline-flex;align-items:center;gap:4px;
+  background:#E63946;color:#fff;
+  font-size:9.5px;font-weight:800;padding:2px 7px;border-radius:var(--radius-pill);
+  margin-left:6px;vertical-align:middle;white-space:nowrap;flex-shrink:0;
+}
+
+/* BLOQUE 6 – panel de rechazo CX */
+.rechazo-panel{display:flex;flex-direction:column;gap:0}
+.consejo-box{
+  background:var(--info-50);border:1px solid #b9d4ec;border-radius:var(--radius);
+  padding:12px 14px;margin-top:10px;
+}
+
+/* BLOQUE 7 – tiempo de espera en lista */
+.req-espera{
+  display:inline-flex;align-items:center;gap:5px;
+  font-size:11px;font-weight:700;color:var(--gray-d);margin-top:5px;
+}
+.req-espera.urgente{color:#C0392B;font-weight:800}
+
+/* BLOQUE 3 – identity strip y archivos adjuntos */
+.identity-strip{
+  display:flex;align-items:center;gap:6px;
+  background:var(--brand-50);border:1px solid var(--brand-100);border-radius:10px;
+  padding:9px 13px;font-size:13px;color:var(--ink-soft);margin-bottom:12px;font-weight:600;
+}
+.identity-strip b{color:var(--brand-700)}
+.adj-drop{
+  display:block;border:2px dashed var(--line);border-radius:var(--radius);
+  padding:0;cursor:pointer;background:#fafdfb;transition:border-color .15s,background .15s;
+  margin-top:4px;
+}
+.adj-drop:hover{border-color:var(--brand);background:var(--brand-50)}
+.adj-file-row{
+  display:flex;align-items:center;gap:9px;padding:13px 16px;
+  font-size:13px;color:var(--gray-d);font-weight:600;
+}
+.adj-file-row svg{flex-shrink:0;color:var(--brand)}
+
+/* BLOQUE 4 – mockups Banner y Pieza Gráfica */
+.monitor-frame{
+  display:flex;flex-direction:column;align-items:center;gap:0;
+}
+.monitor-screen{
+  width:320px;height:180px;background:#00964B;border-radius:12px 12px 0 0;
+  border:3px solid #1a1a2e;display:flex;align-items:center;justify-content:center;
+  overflow:hidden;box-shadow:var(--shadow-2);
+}
+.banner-preview{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  width:100%;height:100%;padding:16px;text-align:center;
+}
+.monitor-stand{
+  width:60px;height:10px;background:#1a1a2e;border-radius:0 0 8px 8px;
+  box-shadow:0 2px 6px rgba(0,0,0,.3);
+}
+.tablet-frame{
+  position:relative;background:#1a1a2e;border-radius:16px;
+  padding:12px 10px;width:220px;
+  box-shadow:var(--shadow-2),inset 0 0 0 2px #2d2d3e;
+}
+.tablet-notch{
+  width:40px;height:5px;background:#2d2d3e;border-radius:3px;
+  margin:0 auto 8px;
+}
+.tablet-screen{
+  background:#fff;border-radius:10px;overflow:hidden;
+  min-height:275px;display:flex;align-items:center;justify-content:center;
+}
+.pieza-preview{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  width:100%;height:100%;padding:20px;text-align:center;
+}
+.pieza-preview .sol{width:48px;height:48px}
+
+/* BLOQUE 8 – tarjetas de impacto del dashboard */
+.dash-impact{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:14px;
+}
+.dk-impact{
+  border-top:4px solid var(--imp-color,var(--brand));
+}
+.dk-impact .dk-ic{
+  background:var(--imp-bg,#EAF5EE)!important;
+  color:var(--imp-color,var(--brand))!important;
+  width:52px;height:52px;font-size:26px;
+}
+.dk-impact .dk-big{font-size:36px}
+
+@media(max-width:980px){
+  .dash-impact{grid-template-columns:1fr 1fr}
+}
+@media(max-width:560px){
+  .dash-impact{grid-template-columns:1fr}
 }

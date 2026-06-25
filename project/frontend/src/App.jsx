@@ -32,6 +32,8 @@ const UserCheck = ({ size = 16, ...p }) => <LI size={size} {...p}><path d="M16 2
 const Headphones = ({ size = 16, ...p }) => <LI size={size} {...p}><path d="M3 14h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a9 9 0 0 1 18 0v7a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3" /></LI>
 const Mail = ({ size = 16, ...p }) => <LI size={size} {...p}><rect width="20" height="16" x="2" y="4" rx="2" /><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" /></LI>
 const AlertCircle = ({ size = 16, ...p }) => <LI size={size} {...p}><circle cx="12" cy="12" r="10" /><line x1="12" x2="12" y1="8" y2="12" /><line x1="12" x2="12.01" y1="16" y2="16" /></LI>
+const BadgeCheck = ({ size = 16, ...p }) => <LI size={size} {...p}><path d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.77 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.74 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.74z" /><path d="m9 12 2 2 4-4" /></LI>
+const Upload = ({ size = 16, ...p }) => <LI size={size} {...p}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" x2="12" y1="3" y2="15" /></LI>
 
 const STEPS = [
   { n: 1, lbl: 'Recepción', Ic: Inbox },
@@ -40,8 +42,8 @@ const STEPS = [
   { n: 4, lbl: 'Legal y Cumplimiento', Ic: Scale },
   { n: 5, lbl: 'Brief + Aprobación CX', Ic: ClipboardCheck },
 ]
-const ST_TXT = { ok: 'Completado', obs: 'Observado', proc: 'En proceso', wait: 'Esperando CX', locked: 'Bloqueado' }
-const TIPOS = ['SMS', 'Email', 'WhatsApp', 'Push notification', 'Carta', 'Speech']
+const ST_TXT = { ok: 'Completado', obs: 'Observado', proc: 'En proceso', wait: 'Esperando CX', locked: 'Pendiente' }
+const TIPOS = ['SMS', 'Email', 'WhatsApp', 'Push notification', 'Carta', 'Speech', 'Banner', 'Pieza grafica']
 
 // Isotipo Mibanco: sol amarillo con rayos triangulares — reutilizado en mockups de canal.
 function Sol({ cls = 'sol', label }) {
@@ -60,30 +62,27 @@ function Sol({ cls = 'sol', label }) {
   )
 }
 
-// Logo oficial Mibanco: sol con rayos triangulares + wordmark "mibanco".
 function MibancoLogo({ dark = false }) {
-  const textFill = dark ? '#00964B' : '#FFFFFF'
-  const rays = Array.from({ length: 16 }, (_, i) => {
-    const a = (i / 16) * 2 * Math.PI
-    const tx = Math.cos(a) * 15, ty = Math.sin(a) * 15
-    const al = a - 0.2, ar = a + 0.2
-    return (
-      <polygon key={i}
-        points={`${(Math.cos(al) * 8.5).toFixed(2)},${(Math.sin(al) * 8.5).toFixed(2)} ${tx.toFixed(2)},${ty.toFixed(2)} ${(Math.cos(ar) * 8.5).toFixed(2)},${(Math.sin(ar) * 8.5).toFixed(2)}`}
-        fill="#FFD100" />
-    )
+  const cx = 40, cy = 40, innerR = 20, outerR = 36
+  const rays = Array.from({ length: 8 }, (_, i) => {
+    const a = (i * 45) * Math.PI / 180, dA = 0.35
+    const tx = cx + outerR * Math.cos(a), ty = cy + outerR * Math.sin(a)
+    const lx = cx + innerR * Math.cos(a - dA), ly = cy + innerR * Math.sin(a - dA)
+    const rx = cx + innerR * Math.cos(a + dA), ry = cy + innerR * Math.sin(a + dA)
+    return `${lx.toFixed(1)},${ly.toFixed(1)} ${tx.toFixed(1)},${ty.toFixed(1)} ${rx.toFixed(1)},${ry.toFixed(1)}`
   })
   return (
-    <svg height="36" viewBox="0 0 158 32" style={{ display: 'block', flexShrink: 0 }} aria-label="mibanco">
-      <text x="29" y="23.5"
-        style={{ fontFamily: "'Nunito',sans-serif", fontWeight: 900, fontSize: '21px', fill: textFill }}>
-        mibanco
-      </text>
-      <g transform="translate(16,16)">
-        {rays}
-        <circle r="8.5" fill="#FFD100" />
-      </g>
-    </svg>
+    <div style={{ position:'relative', width:140, height:36, overflow:'hidden', flexShrink:0 }}>
+      <svg width="80" height="80" viewBox="0 0 80 80"
+        style={{ position:'absolute', top:-8, left:-12 }} aria-hidden="true">
+        {rays.map((pts, i) => <polygon key={i} points={pts} fill="#FFD100" />)}
+        <circle cx={cx} cy={cy} r={innerR} fill="#FFD100" />
+      </svg>
+      <span style={{ position:'absolute', left:26, top:0, right:0, bottom:0,
+        display:'flex', alignItems:'center', fontFamily:"'Nunito','Poppins',sans-serif",
+        fontWeight:800, fontSize:22, color: dark ? '#00964B' : '#FFFFFF',
+        letterSpacing:'-0.01em', whiteSpace:'nowrap', zIndex:2 }}>mibanco</span>
+    </div>
   )
 }
 
@@ -147,6 +146,36 @@ function macroEstado(r) {
   return 'proc'
 }
 
+function parseTs(ts) {
+  if (!ts) return 0
+  const m = ts.match(/(\d{2})\/(\d{2})\/(\d{4}) (\d{2}):(\d{2})/)
+  if (!m) return 0
+  return new Date(+m[3], +m[2] - 1, +m[1], +m[4], +m[5]).getTime()
+}
+
+function tiempoEspera(sol) {
+  const est = macroEstado(sol)
+  if (!['obs', 'wait'].includes(est)) return null
+  const ts = sol.fechaCreacion || sol.historial?.[0]?.ts
+  if (!ts) return null
+  const t = parseTs(ts)
+  if (!t) return null
+  const diffMin = Math.floor((Date.now() - t) / 60000)
+  const diffHrs = Math.floor(diffMin / 60)
+  const diffDias = Math.floor(diffHrs / 24)
+  if (diffMin < 60) return { txt: `Hace ${diffMin} minuto${diffMin === 1 ? '' : 's'}`, urgente: false }
+  if (diffHrs < 24) return { txt: `Hace ${diffHrs} hora${diffHrs === 1 ? '' : 's'}`, urgente: false }
+  return { txt: `Hace ${diffDias} dia${diffDias === 1 ? '' : 's'}`, urgente: true }
+}
+
+function motivoRevision(tipoRiesgo) {
+  const t = (tipoRiesgo || '').toLowerCase()
+  if (t.includes('oferta')) return 'Contiene oferta comercial'
+  if (t.includes('reclamo')) return 'Contiene informacion de reclamo'
+  if (t.includes('crisis')) return 'Comunicacion de crisis detectada'
+  return 'Requiere revision por el equipo CX'
+}
+
 export default function App() {
   const [vista, setVista] = useState('cx')
   const [lista, setLista] = useState([])
@@ -157,6 +186,7 @@ export default function App() {
   const [pending, setPending] = useState(null)
   const [toast, setToast] = useState(null)
   const [cfg, setCfg] = useState(null)
+  const [activeFilter, setActiveFilter] = useState(null)
 
   const selected = lista.find(s => s.id === selId) || null
 
@@ -201,6 +231,7 @@ export default function App() {
   const onRevalidar4 = (id, txt) => runBg(id, 4, 'Re-validando con Legal…', () => api.revalidarPaso4(id, txt), s => s.estados.paso4 === 'ok' ? 'Conforme' : 'Aún hay observaciones legales')
   const onAprobar = (id) => runBg(id, 5, 'Registrando la aprobación de CX…', () => api.aprobar(id), () => 'Solicitud aprobada por CX')
   const onPublicar = (id) => runBg(id, 5, 'Publicando la comunicación…', () => api.publicar(id), () => 'Comunicación publicada')
+  const onRechazar = (id, mensaje) => runBg(id, 5, 'Registrando rechazo…', () => api.rechazar(id, mensaje), () => 'Solicitud rechazada con observaciones')
 
   async function onImportar(file, area) {
     setNuevaOpen(false)
@@ -229,6 +260,20 @@ export default function App() {
   const who = vista === 'cx'
     ? 'Vista CX · Monitoreas TODAS las solicitudes de todas las áreas. Intervienes en el Paso 5 (aprobación final).'
     : 'Vista Solicitante · Ves SOLO tus solicitudes (Área Productos). Atiendes observaciones en los Pasos 2, 3 y 4 y publicas cuando CX aprueba.'
+
+  const sortedLista = [...lista].sort((a, b) => {
+    if (vista === 'cx' && a.requiereRevisionHumana !== b.requiereRevisionHumana)
+      return a.requiereRevisionHumana ? -1 : 1
+    return parseTs(a.fechaCreacion) - parseTs(b.fechaCreacion)
+  })
+  const displayLista = activeFilter
+    ? sortedLista.filter(r => {
+        if (activeFilter === 'obs') return Object.values(r.estados || {}).includes('obs')
+        if (activeFilter === 'wait') return !r.aprobadoCX && !r.publicado && Object.values(r.estados || {}).includes('wait')
+        if (activeFilter === 'ok') return r.aprobadoCX || r.publicado
+        return true
+      })
+    : sortedLista
 
   const stats = {
     total: lista.length,
@@ -278,41 +323,55 @@ export default function App() {
         </div>
 
         <div className="stats">
-          <div className="stat s-total">
+          <div className={'stat s-total' + (!activeFilter ? ' stat-active' : '')}
+            onClick={() => setActiveFilter(null)} style={{ cursor: 'pointer' }}>
             <span className="ic" aria-hidden="true"><FileText size={18} /></span>
             <div className="big">{stats.total}</div><div className="lbl">Solicitudes</div>
           </div>
-          <div className="stat s-obs">
+          <div className={'stat s-obs' + (activeFilter === 'obs' ? ' stat-active' : '')}
+            onClick={() => setActiveFilter(f => f === 'obs' ? null : 'obs')} style={{ cursor: 'pointer' }}>
             <span className="ic" aria-hidden="true"><AlertCircle size={18} /></span>
             <div className="big">{stats.obs}</div><div className="lbl">Con observaciones</div>
           </div>
-          <div className="stat s-wait">
+          <div className={'stat s-wait' + (activeFilter === 'wait' ? ' stat-active' : '')}
+            onClick={() => setActiveFilter(f => f === 'wait' ? null : 'wait')} style={{ cursor: 'pointer' }}>
             <span className="ic" aria-hidden="true"><Clock size={18} /></span>
             <div className="big">{stats.wait}</div><div className="lbl">Esperando CX</div>
           </div>
-          <div className="stat s-ok">
+          <div className={'stat s-ok' + (activeFilter === 'ok' ? ' stat-active' : '')}
+            onClick={() => setActiveFilter(f => f === 'ok' ? null : 'ok')} style={{ cursor: 'pointer' }}>
             <span className="ic" aria-hidden="true"><CheckSquare size={18} /></span>
             <div className="big">{stats.ok}</div><div className="lbl">Aprobadas / publicadas</div>
           </div>
         </div>
 
+        {activeFilter && (
+          <div className="filter-indicator">
+            <span>Filtrando: <b>{activeFilter === 'obs' ? 'Con observaciones' : activeFilter === 'wait' ? 'Esperando CX' : 'Aprobadas / publicadas'}</b> - {displayLista.length} resultado{displayLista.length === 1 ? '' : 's'}</span>
+            <button className="filter-clear" onClick={() => setActiveFilter(null)}>Ver todas</button>
+          </div>
+        )}
+
         <div className="grid">
           <div className="card">
-            <h3>{vista === 'cx' ? 'Solicitudes de todas las áreas' : 'Mis solicitudes · Área Productos'}<span className="count">{lista.length}</span></h3>
-            {lista.length === 0
-              ? <div className="empty"><FileSearch size={46} style={{ opacity: .4 }} /><span>No hay solicitudes.</span></div>
-              : lista.map(r => {
+            <h3>{vista === 'cx' ? 'Solicitudes de todas las áreas' : 'Mis solicitudes - Area Productos'}<span className="count">{displayLista.length}</span></h3>
+            {displayLista.length === 0
+              ? <div className="empty"><FileSearch size={46} style={{ opacity: .4 }} /><span>{activeFilter ? 'No hay solicitudes con ese filtro.' : 'No hay solicitudes.'}</span></div>
+              : displayLista.map(r => {
                 const st = estadoBadge(r, vista)
+                const espera = tiempoEspera(r)
                 return (
                   <div key={r.id} className={'req' + (selId === r.id ? ' sel' : '')} onClick={() => setSelId(r.id)}>
                     <div className="meta">
-                      <div className="ttl"><span className={'sdot ' + st.cls} aria-hidden="true"></span>{r.titulo}</div>
-                      <div className="info">{r.id} · {r.remitente} · {r.fecha}</div>
+                      <div className="ttl"><span className={'sdot ' + st.cls} aria-hidden="true"></span>{r.titulo}
+                        {r.requiereRevisionHumana && vista === 'cx' && <span className="rev-humana-badge"><AlertTriangle size={9} /> Rev. humana</span>}
+                      </div>
+                      <div className="info">{r.id} - {r.remitente} - {r.fecha}</div>
                       <div className="pills">
                         <span className="pill area">{r.area}</span>
                         <span className="pill tipo">{r.tipo}</span>
-                        {r.requiereRevisionHumana && <span className="pill riesgo"><AlertTriangle size={10} /> Revisión humana</span>}
                       </div>
+                      {espera && <div className={'req-espera' + (espera.urgente ? ' urgente' : '')}><Clock size={10} /> {espera.txt}</div>}
                     </div>
                     <span className={'badge ' + st.cls}>{st.txt}</span>
                   </div>
@@ -334,7 +393,7 @@ export default function App() {
         <StepModal
           sol={selected} step={modalStep} vista={vista}
           onClose={() => setModalStep(null)}
-          actions={{ onAceptar2, onRevalidar2, onSubirImg, onAceptar4, onRevalidar4, onAprobar, onPublicar }}
+          actions={{ onAceptar2, onRevalidar2, onSubirImg, onAceptar4, onRevalidar4, onAprobar, onPublicar, onRechazar }}
         />
       )}
 
@@ -367,10 +426,16 @@ function Detalle({ sol, vista, onOpenStep, pending }) {
         <span className={'badge ' + st.cls}>{st.txt}</span>
       </div>
 
-      {sol.requiereRevisionHumana && (
+      {sol.requiereRevisionHumana && vista === 'cx' && (
         <div className="riesgo-banner">
           <span className="ic" aria-hidden="true"><AlertTriangle size={18} /></span>
-          <span><b>Requiere revisión humana obligatoria</b>Clasificada como "{sol.tipoRiesgo}". No se auto-aprueba en los pasos de IA.</span>
+          <span><b>Requiere revision humana obligatoria</b> - Clasificada como "{sol.tipoRiesgo}". No se auto-aprueba en los pasos de IA.</span>
+        </div>
+      )}
+      {sol.requiereRevisionHumana && vista === 'sol' && (
+        <div className="rev-humana-banner-sol">
+          <span aria-hidden="true"><AlertCircle size={18} /></span>
+          <span><b>Esta solicitud requiere revision del equipo CX</b> - {motivoRevision(sol.tipoRiesgo)}. La validacion automatica esta completa, pero el equipo CX debe revisarla antes de aprobarla.</span>
         </div>
       )}
 
@@ -415,7 +480,7 @@ function Detalle({ sol, vista, onOpenStep, pending }) {
         <span className="lg obs"><i></i>Observado</span>
         <span className="lg proc"><i></i>Procesando</span>
         <span className="lg wait"><i></i>Espera CX</span>
-        <span className="lg locked"><i></i>Bloqueado</span>
+        <span className="lg locked"><i></i>Pendiente</span>
       </div>
 
       <div className={'progress' + (done === 5 ? ' done' : '') + (working ? ' busy' : '')}>
@@ -469,8 +534,21 @@ function StepModal({ sol, step, vista, onClose, actions }) {
   const [txt2, setTxt2] = useState(sol.feedbackPaso2?.contenidoCorregido || sol.contenidoActual || '')
   const [own4, setOwn4] = useState(false)
   const [txt4, setTxt4] = useState(sol.feedbackPaso4?.contenidoCorregido || sol.contenidoActual || '')
+  const [rejectMode, setRejectMode] = useState(false)
+  const [rejectMsg, setRejectMsg] = useState('')
+  const [consejo, setConsejo] = useState('')
+  const [loadingConsejo, setLoadingConsejo] = useState(false)
   const e = (n) => sol.estados['paso' + n]
   const chip = { n: step, cls: e(step) }
+
+  async function handleGenerarConsejo() {
+    setLoadingConsejo(true)
+    try {
+      const res = await api.generarConsejoRechazo(sol.id)
+      setConsejo(res.consejo || '')
+    } catch (_) {}
+    finally { setLoadingConsejo(false) }
+  }
 
   // ---- PASO 1 ----
   if (step === 1) return (
@@ -659,15 +737,39 @@ function StepModal({ sol, step, vista, onClose, actions }) {
       </>
     )
     if (vista === 'cx') {
-      if (sol.aprobadoCX) return <Modal title="Paso 5 · Brief + Aprobación CX" chip={chip} onClose={onClose} footer={<button className="btn ghost" onClick={onClose}>Cerrar</button>}>{brief}<div className="note ok">✔ Solicitud aprobada por CX.</div></Modal>
+      if (sol.aprobadoCX) return <Modal title="Paso 5 - Brief + Aprobacion CX" chip={chip} onClose={onClose} footer={<button className="btn ghost" onClick={onClose}>Cerrar</button>}>{brief}<div className="note ok">Solicitud aprobada por CX.</div></Modal>
+      if (sol.estados?.paso5 === 'obs' && sol.mensajeRechazo) return (
+        <Modal title="Paso 5 - Rechazado por CX" chip={chip} onClose={onClose} footer={<button className="btn ghost" onClick={onClose}>Cerrar</button>}>
+          <div className="note bad"><b>Esta solicitud fue rechazada por CX</b><br />{sol.mensajeRechazo}</div>
+          {brief}
+        </Modal>
+      )
       return (
-        <Modal title="Paso 5 · Brief + Aprobación CX" chip={chip} onClose={onClose}
-          footer={<>
+        <Modal title="Paso 5 - Brief + Aprobacion CX" chip={chip} onClose={onClose}
+          footer={rejectMode ? <>
+            <button className="btn ghost" onClick={() => { setRejectMode(false); setConsejo('') }}>Cancelar</button>
+            <button className="btn warn" disabled={!rejectMsg.trim()} onClick={() => { actions.onRechazar(sol.id, rejectMsg); onClose() }}>Confirmar rechazo</button>
+          </> : <>
             <button className="btn ghost" onClick={onClose}>Cerrar</button>
+            <button className="btn warn" onClick={() => setRejectMode(true)}>Rechazar con observaciones</button>
             <button className="btn primary" onClick={() => actions.onAprobar(sol.id)}>Aprobar solicitud</button>
           </>}>
-          <RoleTip><Eye size={13} style={{ marginRight: 5 }} />Vista CX: aquí es donde realmente intervienes. Revisa el brief y da el visto bueno final.</RoleTip>
-          {brief}
+          <RoleTip><Eye size={13} style={{ marginRight: 5 }} />Vista CX: aqui es donde realmente intervienes. Revisa el brief y da el visto bueno final.</RoleTip>
+          {rejectMode ? (
+            <div className="rechazo-panel">
+              <div className="note bad" style={{ marginBottom: 10 }}><b>Redacta el motivo del rechazo</b> - el solicitante lo vera en su bandeja.</div>
+              <textarea value={rejectMsg} onChange={e => setRejectMsg(e.target.value)}
+                placeholder="Describe por que se rechaza esta solicitud y que debe corregirse..." style={{ minHeight: 80 }} />
+              {!consejo && <button className="btn ghost" style={{ marginTop: 8, fontSize: 12 }} onClick={handleGenerarConsejo} disabled={loadingConsejo}>
+                {loadingConsejo ? 'Generando...' : 'Generar sugerencia con IA'}
+              </button>}
+              {consejo && <div className="consejo-box">
+                <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--gray-d)', marginBottom: 4 }}>SUGERENCIA IA:</div>
+                <div style={{ fontSize: 13, lineHeight: 1.55 }}>{consejo}</div>
+                <button className="btn ghost" style={{ marginTop: 8, fontSize: 12 }} onClick={() => setRejectMsg(consejo)}>Usar esta sugerencia</button>
+              </div>}
+            </div>
+          ) : brief}
         </Modal>
       )
     }
@@ -713,7 +815,9 @@ function chan(tipo) {
   if (t.includes('sms')) return 'sms'
   if (t.includes('push')) return 'push'
   if (t.includes('carta')) return 'carta'
-  if (t.includes('speech') || t.includes('guion') || t.includes('guión')) return 'speech'
+  if (t.includes('speech') || t.includes('guion') || t.includes('guion')) return 'speech'
+  if (t.includes('banner')) return 'banner'
+  if (t.includes('pieza')) return 'pieza'
   return 'sms'
 }
 const cleanName = s => (s || '').replace(/<[^>]*>/g, '').trim() || 'Cliente Mibanco'
@@ -845,6 +949,47 @@ function SpeechMock({ sol, texto, diffFrom }) {
   )
 }
 
+function BannerMock({ sol, texto }) {
+  const cx = 40, cy = 40, innerR = 20, outerR = 36
+  const rays = Array.from({ length: 8 }, (_, i) => {
+    const a = (i * 45) * Math.PI / 180, dA = 0.35
+    const tx = cx + outerR * Math.cos(a), ty = cy + outerR * Math.sin(a)
+    const lx = cx + innerR * Math.cos(a - dA), ly = cy + innerR * Math.sin(a - dA)
+    const rx = cx + innerR * Math.cos(a + dA), ry = cy + innerR * Math.sin(a + dA)
+    return `${lx.toFixed(1)},${ly.toFixed(1)} ${tx.toFixed(1)},${ty.toFixed(1)} ${rx.toFixed(1)},${ry.toFixed(1)}`
+  })
+  return (
+    <div className="monitor-frame">
+      <div className="monitor-screen">
+        <div className="banner-preview">
+          <svg width="48" height="48" viewBox="0 0 80 80" style={{ opacity: .85 }} aria-hidden="true">
+            {rays.map((pts, i) => <polygon key={i} points={pts} fill="#FFD100" />)}
+            <circle cx={cx} cy={cy} r={innerR} fill="#FFD100" />
+          </svg>
+          <div style={{ color: '#fff', fontFamily: "'Nunito',sans-serif", fontWeight: 800, fontSize: 13, marginTop: 4 }}>mibanco</div>
+          {texto && <div style={{ color: 'rgba(255,255,255,.85)', fontSize: 11, marginTop: 8, maxWidth: 200, textAlign: 'center', lineHeight: 1.4 }}>{texto.slice(0, 120)}</div>}
+        </div>
+      </div>
+      <div className="monitor-stand" />
+    </div>
+  )
+}
+
+function PiezaMock({ sol, texto }) {
+  return (
+    <div className="tablet-frame">
+      <div className="tablet-notch" />
+      <div className="tablet-screen">
+        <div className="pieza-preview">
+          <Sol cls="sol" label="Mibanco" />
+          <div style={{ fontFamily: "'Nunito',sans-serif", fontWeight: 800, fontSize: 15, color: 'var(--brand)', marginTop: 8 }}>mibanco</div>
+          {texto && <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginTop: 10, lineHeight: 1.5, maxWidth: 180, textAlign: 'center' }}>{texto.slice(0, 150)}</div>}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function DevicePreview({ sol, texto, diffFrom = null }) {
   const k = chan(sol.tipo)
   if (k === 'email') return <EmailMock sol={sol} texto={texto} diffFrom={diffFrom} />
@@ -852,6 +997,8 @@ function DevicePreview({ sol, texto, diffFrom = null }) {
   if (k === 'push') return <PushMock sol={sol} texto={texto} diffFrom={diffFrom} />
   if (k === 'carta') return <CartaMock sol={sol} texto={texto} diffFrom={diffFrom} />
   if (k === 'speech') return <SpeechMock sol={sol} texto={texto} diffFrom={diffFrom} />
+  if (k === 'banner') return <BannerMock sol={sol} texto={texto} />
+  if (k === 'pieza') return <PiezaMock sol={sol} texto={texto} />
   return <SmsMock sol={sol} texto={texto} diffFrom={diffFrom} />
 }
 
@@ -1067,47 +1214,47 @@ function BeforeAfter({ sol, antes, despues, lblAntes = 'Versión actual', lblDes
 
 function NuevaModal({ onClose, onCrear, onImportar }) {
   const AREA = 'Productos'
+  const NOMBRE = 'Solicitante'
   const [modo, setModo] = useState('escribir')
   const [tipo, setTipo] = useState('SMS')
   const [titulo, setTitulo] = useState('')
-  const [remitente, setRemitente] = useState('')
   const [contenido, setContenido] = useState('')
   const [asesorNombre, setAsesorNombre] = useState('')
   const [asesorTelefono, setAsesorTelefono] = useState('')
-  const [files, setFiles] = useState([])
-  const [msgFile, setMsgFile] = useState(null)
+  const [adjuntos, setAdjuntos] = useState([])
 
   function submit() {
     if (modo === 'msg') {
+      const msgFile = adjuntos.find(f => f.name.toLowerCase().endsWith('.msg'))
       if (!msgFile) { alert('Selecciona un archivo .msg de Outlook.'); return }
       onImportar(msgFile, AREA)
       return
     }
-    if (!contenido.trim()) { alert('Escribe el contenido de la comunicación.'); return }
+    if (!contenido.trim()) { alert('Escribe el contenido de la comunicacion.'); return }
     const fd = new FormData()
-    fd.append('titulo', titulo || `Comunicación ${tipo}`)
-    fd.append('remitente', remitente || 'Solicitante')
+    fd.append('titulo', titulo || `Comunicacion ${tipo}`)
+    fd.append('remitente', NOMBRE)
     fd.append('area', AREA)
     fd.append('tipo', tipo)
     fd.append('contenido', contenido)
     fd.append('asesorNombre', asesorNombre)
     fd.append('asesorTelefono', asesorTelefono)
-    files.forEach(f => fd.append('imagenes', f))
+    adjuntos.filter(f => f.type.startsWith('image/')).forEach(f => fd.append('imagenes', f))
     onCrear(fd)
   }
 
+  const adjNombres = adjuntos.map(f => f.name).join(', ')
+
   return (
-    <Modal title="Nueva solicitud de comunicación" onClose={onClose}
+    <Modal title="Nueva solicitud de comunicacion" onClose={onClose}
       footer={<>
         <button className="btn ghost" onClick={onClose}>Cancelar</button>
         <button className="btn primary" onClick={submit}>{modo === 'msg' ? 'Importar y validar con IA' : 'Enviar y validar con IA'}</button>
       </>}>
-      <div className="note info" style={{ flexWrap: 'wrap', lineHeight: 1.6 }}><span style={{ flex: 1, minWidth: 0, whiteSpace: 'normal' }}>Eres el <b>solicitante (Área Productos)</b>. Elige el tipo de mensaje que quieres enviar: puedes escribirlo o adjuntar el correo de Outlook (<b>.msg</b>). Los agentes Gemini lo validan en vivo y la solicitud quedará visible también para el equipo CX.</span></div>
 
-      <label className="fld">Tipo de mensaje que quieres enviar</label>
-      {modo === 'escribir'
-        ? <select value={tipo} onChange={e => setTipo(e.target.value)}>{TIPOS.map(t => <option key={t}>{t}</option>)}</select>
-        : <select value="Email" disabled><option>Email (se detecta automáticamente del .msg)</option></select>}
+      <div className="identity-strip">
+        Solicitando como: <b>{NOMBRE}</b> - Area <b>{AREA}</b>
+      </div>
 
       <div className="segmented">
         <button className={modo === 'escribir' ? 'active' : ''} onClick={() => setModo('escribir')}>
@@ -1120,29 +1267,38 @@ function NuevaModal({ onClose, onCrear, onImportar }) {
 
       {modo === 'escribir' ? (
         <>
-          <label className="fld">Título</label>
-          <input type="text" value={titulo} onChange={e => setTitulo(e.target.value)} placeholder={`Comunicación ${tipo}`} />
-          <label className="fld">Remitente</label>
-          <input type="text" value={remitente} onChange={e => setRemitente(e.target.value)} placeholder="Tu nombre" />
+          <label className="fld">Tipo de pieza</label>
+          <select value={tipo} onChange={e => setTipo(e.target.value)}>{TIPOS.map(t => <option key={t}>{t}</option>)}</select>
+          <label className="fld">Titulo</label>
+          <input type="text" value={titulo} onChange={e => setTitulo(e.target.value)} placeholder={`Comunicacion ${tipo}`} />
           <label className="fld">Contenido del mensaje</label>
-          <textarea value={contenido} onChange={e => setContenido(e.target.value)} placeholder="Escribe el mensaje a validar…" style={{ minHeight: 110 }} />
+          <textarea value={contenido} onChange={e => setContenido(e.target.value)} placeholder="Escribe el mensaje a validar..." style={{ minHeight: 110 }} />
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-            <div><label className="fld">Asesor (nombre)</label><input type="text" value={asesorNombre} onChange={e => setAsesorNombre(e.target.value)} placeholder="Luis Pérez" /></div>
-            <div><label className="fld">Asesor (teléfono)</label><input type="text" value={asesorTelefono} onChange={e => setAsesorTelefono(e.target.value)} placeholder="987 654 321" /></div>
+            <div><label className="fld">Asesor (nombre)</label><input type="text" value={asesorNombre} onChange={e => setAsesorNombre(e.target.value)} placeholder="Luis Perez" /></div>
+            <div><label className="fld">Asesor (telefono)</label><input type="text" value={asesorTelefono} onChange={e => setAsesorTelefono(e.target.value)} placeholder="987 654 321" /></div>
           </div>
-          <label className="fld">Imágenes adjuntas (opcional, se validan por marca)</label>
-          <input type="file" accept="image/*" multiple onChange={e => setFiles(Array.from(e.target.files))} />
-          {files.length > 0 && <div style={{ fontSize: 12, color: 'var(--gray-d)', marginTop: 6 }}>{files.length} imagen(es) seleccionada(s)</div>}
+          <label className="fld">Archivos adjuntos <span style={{ fontWeight: 600, color: 'var(--gray-d)' }}>(imagenes para validacion de marca)</span></label>
+          <label className="adj-drop">
+            <input type="file" accept=".msg,.pdf,.docx,.png,.jpg,.jpeg,.gif,image/*" multiple style={{ display: 'none' }}
+              onChange={e => setAdjuntos(Array.from(e.target.files))} />
+            <div className="adj-file-row">
+              <Upload size={14} />
+              <span>{adjuntos.length > 0 ? adjNombres : 'Seleccionar archivos (.msg, PDF, DOCX, imagenes)'}</span>
+            </div>
+          </label>
         </>
       ) : (
         <>
-          <label className="fld">Correo de Outlook (.msg)</label>
-          <label className="msgdrop" style={{ display: 'block', cursor: 'pointer' }}>
-            {msgFile
-              ? <span style={{ color: 'var(--green-d)', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6 }}><Mail size={14} /> {msgFile.name}</span>
-              : <><Mail size={16} style={{ marginRight: 6, verticalAlign: 'middle' }} />Haz clic para seleccionar un archivo <b>.msg</b><br /><span style={{ fontSize: 11 }}>Se extraerá asunto, remitente, cuerpo e imágenes (banners) del correo.</span></>}
-            <input type="file" accept=".msg" style={{ display: 'none' }} onChange={e => setMsgFile(e.target.files[0] || null)} />
+          <label className="fld">Archivos adjuntos <span style={{ fontWeight: 600, color: 'var(--gray-d)' }}>(correo .msg de Outlook)</span></label>
+          <label className="adj-drop">
+            <input type="file" accept=".msg" style={{ display: 'none' }}
+              onChange={e => setAdjuntos(e.target.files[0] ? [e.target.files[0]] : [])} />
+            <div className="adj-file-row">
+              <Mail size={14} />
+              <span>{adjuntos.length > 0 ? adjuntos[0].name : 'Seleccionar archivo .msg de Outlook'}</span>
+            </div>
           </label>
+          {adjuntos.length > 0 && <div style={{ fontSize: 11, color: 'var(--gray-d)', marginTop: 4 }}>Se extraera asunto, remitente, cuerpo e imagenes del correo.</div>}
         </>
       )}
     </Modal>
@@ -1163,7 +1319,7 @@ const ESTADO_META = [
   { k: 'pub', lbl: 'Publicadas', color: '#00964B' },
   { k: 'aprob', lbl: 'Aprobadas CX', color: '#71B74C' },
   { k: 'wait', lbl: 'Esperando CX', color: '#7E57C2' },
-  { k: 'obs', lbl: 'Con observaciones', color: '#E63946' },
+  { k: 'obs', lbl: 'Con observaciones', color: '#CA7C2F' },
   { k: 'proc', lbl: 'En proceso', color: '#2563EB' },
 ]
 
@@ -1247,6 +1403,10 @@ function Dashboard({ lista, cfg, onRefresh, onVerCX }) {
   const aprobadas = macro.pub + macro.aprob
   const pendientes = macro.obs + macro.wait
   const tasaAprob = total ? Math.round((aprobadas / total) * 100) : 0
+  const erroresDetectados = lista.reduce((a, r) => {
+    const obs = Object.values(r.estados || {}).filter(e => e === 'obs').length
+    return a + obs
+  }, 0)
   const revHumana = lista.filter(r => r.requiereRevisionHumana).length
 
   const etapas = STEPS.map(s => ({
@@ -1264,12 +1424,12 @@ function Dashboard({ lista, cfg, onRefresh, onVerCX }) {
   const tipos = groupCount(lista, r => r.tipo)
   const maxTipo = Math.max(1, ...tipos.map(t => t.v))
 
-  const atencion = lista
+  const atencion = [...lista]
     .filter(r => ['obs', 'wait'].includes(macroEstado(r)))
-    .sort((a, b) => (macroEstado(a) === 'obs' ? 0 : 1) - (macroEstado(b) === 'obs' ? 0 : 1))
+    .sort((a, b) => parseTs(a.fechaCreacion) - parseTs(b.fechaCreacion))
 
   if (total === 0) return (
-    <div className="empty"><FileSearch size={46} style={{ opacity: .4 }} /><span>Aún no hay solicitudes para graficar. Crea una desde la Vista Solicitante.</span></div>
+    <div className="empty"><FileSearch size={46} style={{ opacity: .4 }} /><span>Aun no hay solicitudes para graficar. Crea una desde la Vista Solicitante.</span></div>
   )
 
   return (
@@ -1277,16 +1437,44 @@ function Dashboard({ lista, cfg, onRefresh, onVerCX }) {
       <div className="dash-head">
         <div>
           <h2>Dashboard de avance</h2>
-          <p>Métricas en vivo del flujo de validación · {total} solicitud{total === 1 ? '' : 'es'} de todas las áreas</p>
+          <p>Metricas en vivo del flujo de validacion - {total} solicitud{total === 1 ? '' : 'es'} de todas las areas</p>
         </div>
         <div className="dash-head-right">
           {cfg && <span className="envtag dark"><span className="live"></span>{cfg.modelo?.model}</span>}
-          <button className="btn ghost dash-refresh" onClick={onRefresh} title="Actualizar métricas">↻ Actualizar</button>
+          <button className="btn ghost dash-refresh" onClick={onRefresh} title="Actualizar metricas">Actualizar</button>
         </div>
       </div>
 
-      {/* ---- KPIs ---- */}
-      <div className="dash-kpis">
+      {/* Fila 1: Tarjetas de impacto */}
+      <div className="dash-impact">
+        <div className="dk dk-impact" style={{ '--imp-color': '#00964B', '--imp-bg': '#EAF5EE' }}>
+          <div className="dk-ic"><ShieldCheck size={26} /></div>
+          <div className="dk-body">
+            <div className="dk-big">{publicadas}</div>
+            <div className="dk-lbl">Comunicaciones protegidas</div>
+            <div className="dk-sub">publicadas y aprobadas por IA + CX</div>
+          </div>
+        </div>
+        <div className="dk dk-impact" style={{ '--imp-color': '#E63946', '--imp-bg': '#FDECEA' }}>
+          <div className="dk-ic"><AlertCircle size={26} /></div>
+          <div className="dk-body">
+            <div className="dk-big">{erroresDetectados}</div>
+            <div className="dk-lbl">Errores detectados</div>
+            <div className="dk-sub">observaciones de IA en total</div>
+          </div>
+        </div>
+        <div className="dk dk-impact" style={{ '--imp-color': '#2563EB', '--imp-bg': '#EAF0FB' }}>
+          <div className="dk-ic"><BadgeCheck size={26} /></div>
+          <div className="dk-body">
+            <div className="dk-big">{tasaAprob}%</div>
+            <div className="dk-lbl">Cumplimiento regulatorio</div>
+            <div className="dk-sub">{aprobadas} de {total} aprobadas sin bloqueos</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Fila 2: KPIs operacionales */}
+      <div className="dash-kpis" style={{ gridTemplateColumns: 'repeat(4,1fr)' }}>
         <div className="dk">
           <div className="dk-ic" style={{ background: '#EAF5EE', color: '#00964B' }}><FileText size={22} /></div>
           <div className="dk-body"><div className="dk-big">{total}</div><div className="dk-lbl">Solicitudes totales</div></div>
@@ -1296,23 +1484,19 @@ function Dashboard({ lista, cfg, onRefresh, onVerCX }) {
           <div className="dk-body"><div className="dk-lbl">Avance global</div><div className="dk-sub">{pasosOk} de {total * 5} pasos validados</div></div>
         </div>
         <div className="dk">
-          <div className="dk-ic" style={{ background: '#EAF5EE', color: '#00964B' }}><CheckSquare size={22} /></div>
-          <div className="dk-body"><div className="dk-big">{aprobadas}</div><div className="dk-lbl">Aprobadas / publicadas</div><div className="dk-sub">{tasaAprob}% del total · {publicadas} publicadas</div></div>
-        </div>
-        <div className="dk">
           <div className="dk-ic" style={{ background: '#FEE8E8', color: '#E63946' }}><AlertTriangle size={22} /></div>
-          <div className="dk-body"><div className="dk-big">{pendientes}</div><div className="dk-lbl">Requieren acción</div><div className="dk-sub">{macro.obs} con observaciones · {macro.wait} esperando CX</div></div>
+          <div className="dk-body"><div className="dk-big">{pendientes}</div><div className="dk-lbl">Requieren accion</div><div className="dk-sub">{macro.obs} observadas - {macro.wait} esperando CX</div></div>
         </div>
         <div className="dk">
           <div className="dk-ic" style={{ background: '#EAF0FB', color: '#2563EB' }}><UserCheck size={22} /></div>
-          <div className="dk-body"><div className="dk-big">{revHumana}</div><div className="dk-lbl">Revisión humana</div><div className="dk-sub">clasificadas como riesgo</div></div>
+          <div className="dk-body"><div className="dk-big">{revHumana}</div><div className="dk-lbl">Revision humana</div><div className="dk-sub">clasificadas como riesgo</div></div>
         </div>
       </div>
 
-      {/* ---- Gráficos ---- */}
+      {/* Fila 3: Dona + Avance por etapa */}
       <div className="dash-grid">
         <div className="panel">
-          <div className="panel-h"><h3>Estado del pipeline</h3><span className="panel-s">distribución de solicitudes</span></div>
+          <div className="panel-h"><h3>Estado del pipeline</h3><span className="panel-s">distribucion de solicitudes</span></div>
           <div className="donut-row">
             <Donut segments={segEstado} centerTop={total} centerBottom="solicitudes" />
             <div className="donut-legend">
@@ -1346,69 +1530,36 @@ function Dashboard({ lista, cfg, onRefresh, onVerCX }) {
             })}
           </div>
         </div>
-
-        <div className="panel">
-          <div className="panel-h"><h3>Por área solicitante</h3><span className="panel-s">volumen y estado</span></div>
-          <div className="cbars">
-            {areas.map(a => (
-              <div key={a.k} className="cbar-row">
-                <div className="cbar-name">{a.k}</div>
-                <CompBar segments={areaSegs(a.k)} total={a.v} max={maxArea} />
-                <div className="cbar-val">{a.v}</div>
-              </div>
-            ))}
-          </div>
-          <div className="cbar-legend">
-            {ESTADO_META.map(m => (
-              <span key={m.k} className="leg-item-sm"><span className="leg-dot" style={{ background: m.color }} />{m.lbl}</span>
-            ))}
-          </div>
-        </div>
-
-        <div className="panel">
-          <div className="panel-h"><h3>Por tipo de pieza</h3><span className="panel-s">canal de comunicación</span></div>
-          <div className="cbars">
-            {tipos.map(t => {
-              const pct = Math.max(6, (t.v / maxTipo) * 100)
-              return (
-                <div key={t.k} className="cbar-row">
-                  <div className="cbar-name">{t.k}</div>
-                  <div className="cbar-track"><div className="cbar-fill solid" style={{ width: pct + '%' }} /></div>
-                  <div className="cbar-val">{t.v}</div>
-                </div>
-              )
-            })}
-          </div>
-        </div>
       </div>
 
-      {/* ---- Atención requerida ---- */}
+      {/* Fila 4: Tabla de atencion ordenada por antiguedad */}
       <div className="panel attn">
         <div className="panel-h">
-          <h3>Requieren atención</h3>
-          <span className="panel-s">{atencion.length} solicitud{atencion.length === 1 ? '' : 'es'} con observaciones o esperando aprobación</span>
+          <h3>Requieren atencion</h3>
+          <span className="panel-s">{atencion.length} solicitud{atencion.length === 1 ? '' : 'es'} - ordenadas por tiempo de espera</span>
         </div>
         {atencion.length === 0 ? (
-          <div className="attn-empty">✓ Todo al día: ninguna solicitud pendiente de acción.</div>
+          <div className="attn-empty">Todo al dia: ninguna solicitud pendiente de accion.</div>
         ) : (
           <div className="attn-list">
             {atencion.map(r => {
               const m = macroEstado(r)
               const meta = ESTADO_META.find(x => x.k === m)
               const done = Object.values(r.estados || {}).filter(e => e === 'ok').length
+              const espera = tiempoEspera(r)
               return (
                 <div key={r.id} className="attn-row">
                   <span className="attn-dot" style={{ background: meta?.color }} />
                   <div className="attn-meta">
                     <div className="attn-ttl">{r.titulo}</div>
-                    <div className="attn-sub">{r.id} · {r.area} · {r.tipo}{r.requiereRevisionHumana ? ' · revisión humana' : ''}</div>
+                    <div className="attn-sub">{r.id} - {r.area} - {r.tipo}{r.requiereRevisionHumana ? ' - revision humana' : ''}{espera ? ` - ${espera.txt}` : ''}</div>
                   </div>
                   <div className="attn-prog"><div className="attn-prog-track"><div className="attn-prog-fill" style={{ width: (done / 5 * 100) + '%' }} /></div><span>{done}/5</span></div>
                   <span className="attn-badge" style={{ background: meta?.color }}>{meta?.lbl}</span>
                 </div>
               )
             })}
-            {onVerCX && <button className="btn ghost attn-cta" onClick={onVerCX}>Ir a la Vista CX para gestionarlas →</button>}
+            {onVerCX && <button className="btn ghost attn-cta" onClick={onVerCX}>Ir a la Vista CX para gestionarlas</button>}
           </div>
         )}
       </div>

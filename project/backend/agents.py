@@ -199,7 +199,9 @@ def validar_redaccion(tipo: str, contenido: str, asesor: dict) -> dict:
         "\"principios_afectados\": [\"...\"], \"contenido_corregido\": \"...\"}. "
         "'cumple' es true SOLO si nivel='aprobado'. Si nivel='aprobado', 'fallos' y 'principios_afectados' "
         "van vacíos y 'contenido_corregido' es el mensaje tal cual. Si el caso no es auto-corregible, deja "
-        "'contenido_corregido' igual al original y explica en 'fallos' que requiere rediseño humano."
+        "'contenido_corregido' igual al original y explica en 'fallos' que requiere rediseño humano. "
+        "Importante: nunca uses guiones largos en tus respuestas. Usa siempre guiones cortos -. "
+        "Nunca uses comillas angulares. Usa siempre comillas normales."
     )
     asesor_txt = f"{asesor.get('nombre','')} ({asesor.get('telefono','')})" if asesor else "no especificado"
     prompt = f"Canal: {tipo}\nDatos del Asesor de Negocios: {asesor_txt}\nMensaje a evaluar:\n{contenido}"
@@ -274,7 +276,9 @@ def validar_legal(contenido: str, tipo: str = "") -> dict:
         "Responde SOLO JSON: {\"cumple\": true|false, \"nivel\": \"aprobado|observacion|alerta|critico\", "
         "\"accion\": \"aprobar|corregir|escalar|bloquear\", \"observaciones\": [\"...\"], "
         "\"sugerencias\": [\"...\"], \"normas\": [\"...\"], \"contenido_corregido\": \"...\"}. "
-        "'cumple' es true SOLO si nivel='aprobado'."
+        "'cumple' es true SOLO si nivel='aprobado'. "
+        "Importante: nunca uses guiones largos en tus respuestas. Usa siempre guiones cortos -. "
+        "Nunca uses comillas angulares. Usa siempre comillas normales."
     )
     prompt = f"Canal: {tipo}\nMensaje a revisar:\n{contenido}"
     default = {"cumple": True, "nivel": "aprobado", "accion": "aprobar", "observaciones": [], "sugerencias": [], "normas": [], "contenido_corregido": contenido}
@@ -304,7 +308,9 @@ def generar_brief(sol: dict) -> str:
         "(aprobar / corregir / escalar / bloquear). "
         "Si hay una norma citada (SBS, INDECOPI, Ley 29733/29571/32323), menciónala brevemente. "
         "Si la solicitud requiere revisión humana obligatoria o está BLOQUEADA, indícalo de forma destacada al "
-        "inicio. Tono claro y accionable. Devuelve solo el texto del brief, sin markdown ni encabezados extra."
+        "inicio. Tono claro y accionable. Devuelve solo el texto del brief, sin markdown ni encabezados extra. "
+        "Importante: nunca uses guiones largos en tus respuestas. Usa siempre guiones cortos -. "
+        "Nunca uses comillas angulares. Usa siempre comillas normales."
     )
     resumen = {
         "titulo": sol.get("titulo"),
@@ -332,6 +338,35 @@ def generar_brief(sol: dict) -> str:
             f"Redacción: {sol.get('estados',{}).get('paso2')} · "
             f"Marca: {sol.get('estados',{}).get('paso3')} · "
             f"Legal: {sol.get('estados',{}).get('paso4')}."
+        )
+
+
+def generar_consejo_rechazo(sol: dict) -> str:
+    """Genera un mensaje constructivo de rechazo para que CX se lo envie al solicitante."""
+    sys = (
+        "Eres el Agente CX de Mibanco. Genera un mensaje de rechazo constructivo (maximo 150 palabras) "
+        "para enviar al solicitante. El mensaje debe: explicar brevemente por que la pieza requiere "
+        "revision humana, indicar que observaciones concretas debe corregir, y ser amable y orientador "
+        "(tono de asesor, no de juez). No uses tecnicismos. Devuelve solo el texto del mensaje. "
+        "Importante: nunca uses guiones largos. Usa siempre guiones cortos -. "
+        "Nunca uses comillas angulares. Usa siempre comillas normales."
+    )
+    datos = {
+        "tipo_riesgo": sol.get("tipoRiesgo"),
+        "tipo_pieza": sol.get("tipo"),
+        "observaciones_redaccion": sol.get("feedbackPaso2", {}).get("fallos", []),
+        "observaciones_legal": sol.get("feedbackPaso4", {}).get("observaciones", []),
+    }
+    import json
+    prompt = "Datos de la solicitud:\n" + json.dumps(datos, ensure_ascii=False, indent=2)
+    try:
+        resp = client().models.generate_content(model=MODEL, contents=prompt, config=_config(sys, json_mode=False, temperature=0.4))
+        return (resp.text or "").strip()
+    except Exception as e:
+        return (
+            f"Esta comunicacion requiere ajustes antes de poder aprobarse. "
+            f"Por favor revisa las observaciones indicadas en el flujo de validacion "
+            f"y corrige los puntos senalados. Si tienes dudas, contacta al equipo CX."
         )
 
 

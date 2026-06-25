@@ -248,12 +248,20 @@ CASOS_NO_AUTOCORREGIBLE = (
 KEYWORDS_REVISION_HUMANA = [
     # Reclamos
     "reclamo", "reclamos", "queja", "quejas", "demanda", "indecopi", "disconforme",
+    "denuncia", "insatisfecho", "insatisfecha", "mal servicio", "mala atencion",
+    "incumplimiento", "perjuicio", "error del banco", "cobro indebido",
     # Crisis
     "crisis", "fraude", "estafa", "robo", "hackeo", "hackearon", "phishing",
-    "emergencia", "urgente nacional", "brecha", "filtración", "fuga de datos",
-    # Ofertas comerciales
-    "oferta", "ofertas", "promoción", "promocion", "promo", "descuento", "descuentos",
+    "emergencia", "urgente nacional", "brecha", "filtracion", "fuga de datos",
+    "fenomeno del nino", "desastre natural", "pandemia",
+    "suspension de servicios", "cierre de agencias", "caso fortuito", "fuerza mayor",
+    # Ofertas comerciales (terminos que indican una oferta, no menciones neutrales)
+    "oferta", "ofertas", "oferta especial", "oferta de credito",
+    "promocion", "promo", "descuento", "descuentos",
     "gratis", "regalo", "sorteo", "premio", "% dscto", "% de descuento",
+    "credito pre-aprobado", "prestamo pre-aprobado", "tasa especial", "tasa preferencial",
+    "producto financiero", "seguro mibanco", "financiamiento especial",
+    "linea de credito disponible", "capital de trabajo disponible",
     # Cobranza sensible
-    "cobranza", "mora", "deuda vencida", "acción legal", "acciones legales",
+    "cobranza", "mora", "deuda vencida", "accion legal", "acciones legales",
 ]

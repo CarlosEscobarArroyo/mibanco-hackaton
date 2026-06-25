@@ -82,6 +82,7 @@ def _base(**kw):
         "titulo": kw["titulo"],
         "remitente": kw["remitente"],
         "fecha": kw.get("fecha", hoy()),
+        "fechaCreacion": kw.get("fechaCreacion", kw.get("fecha", hoy()) + " 09:00"),
         "area": kw["area"],
         "tipo": kw["tipo"],
         "contenidoOriginal": kw["contenido"],
@@ -116,7 +117,7 @@ def seed():
     seeds = [
         _base(
             id=nuevo_id(), titulo="Campaña SMS pago oportuno", remitente="María Quispe",
-            fecha="18/06/2026", area="Productos", tipo="SMS",
+            fecha="18/06/2026", fechaCreacion="18/06/2026 08:15", area="Productos", tipo="SMS",
             contenido=("Estimado cliente apreciado, le informamos que en virtud de su condición crediticia "
                        "actual usted dispone de la posibilidad de efectuar el abono correspondiente a su "
                        "obligación financiera antes de la fecha límite estipulada para evitar penalidades."),
@@ -131,12 +132,12 @@ def seed():
                 ],
                 "principios": ["Lenguaje simple y cercano", "Fácil de actuar (CTA claro)", "Considerar datos del Asesor de Negocios"],
                 "contenidoCorregido": ("Hola {Nombre}, recuerda pagar tu cuota antes del 25/06 y evita recargos. "
-                                       "Paga fácil en la app Mibanco. — Tu asesor: Luis Pérez"),
+                                       "Paga fácil en la app Mibanco. - Tu asesor: Luis Pérez"),
             },
         ),
         _base(
             id=nuevo_id(), titulo="Email bienvenida crédito", remitente="Jorge Ramos",
-            fecha="18/06/2026", area="Digital", tipo="Email",
+            fecha="18/06/2026", fechaCreacion="18/06/2026 10:30", area="Digital", tipo="Email",
             contenido="Hola {Nombre}, ¡bienvenido a Mibanco! Tu crédito ya está activo. Cualquier consulta escríbenos.",
             contenidoActual=("Hola {Nombre}, ¡bienvenido a Mibanco! Tu crédito ya está activo. Tu asesor {Asesor} "
                              "te acompañará. Ingresa a la app para ver tu cronograma."),
@@ -161,7 +162,7 @@ def seed():
         ),
         _base(
             id=nuevo_id(), titulo="WhatsApp recordatorio cuota", remitente="Ana Torres",
-            fecha="17/06/2026", area="Negocios", tipo="WhatsApp",
+            fecha="17/06/2026", fechaCreacion="17/06/2026 14:45", area="Negocios", tipo="WhatsApp",
             contenido="Hola {Nombre} 👋 te recordamos que tu cuota vence el 25/06. Paga en la app Mibanco. Tu asesor: {Asesor}.",
             asesor={"nombre": "Carlos Ruiz", "telefono": "955 333 444"},
             estados=_estados(p1="ok", p2="ok", p3="ok", p4="obs"),
@@ -178,7 +179,7 @@ def seed():
         ),
         _base(
             id=nuevo_id(), titulo="Push promo seguro", remitente="Carla Díaz",
-            fecha="16/06/2026", area="Productos", tipo="Push notification",
+            fecha="16/06/2026", fechaCreacion="16/06/2026 09:00", area="Productos", tipo="Push notification",
             contenido="Protege tu negocio con el Seguro Mibanco. Actívalo desde la app.",
             asesor={"nombre": "Luis Pérez", "telefono": "987 654 321"},
             estados=_estados(p1="ok", p2="ok", p3="ok", p4="ok", p5="wait"),
@@ -186,15 +187,15 @@ def seed():
         ),
         _base(
             id=nuevo_id(), titulo="SMS confirmación desembolso", remitente="Pedro Soto",
-            fecha="15/06/2026", area="Digital", tipo="SMS",
-            contenido="Hola {Nombre}, tu desembolso fue realizado. Revisa tu cuenta. — Mibanco Oficial",
+            fecha="15/06/2026", fechaCreacion="15/06/2026 11:20", area="Digital", tipo="SMS",
+            contenido="Hola {Nombre}, tu desembolso fue realizado. Revisa tu cuenta. - Mibanco Oficial",
             asesor={"nombre": "Rosa Medina", "telefono": "999 111 222"},
             estados=_estados(p1="ok", p2="ok", p3="ok", p4="ok", p5="ok"),
             aprobadoCX=True,
-            brief=("Pieza: SMS — Confirmación de desembolso (Área Digital). Versión final: 'Hola {Nombre}, tu "
-                   "desembolso fue realizado. Revisa tu cuenta. — Mibanco Oficial'. Redacción: OK (claro, breve, "
-                   "remitente oficial). Marca/imágenes: no aplica. Legal: OK (sin datos sensibles, sin promesas "
-                   "indebidas). Recomendación: aprobado para envío."),
+            brief=("Pieza: SMS - Confirmacion de desembolso (Area Digital). Version final: 'Hola {Nombre}, tu "
+                   "desembolso fue realizado. Revisa tu cuenta. - Mibanco Oficial'. Redaccion: OK (claro, breve, "
+                   "remitente oficial). Marca/imagenes: no aplica. Legal: OK (sin datos sensibles, sin promesas "
+                   "indebidas). Recomendacion: aprobado para envio."),
         ),
     ]
 

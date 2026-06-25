@@ -40,6 +40,10 @@ class ContenidoBody(BaseModel):
     contenido: str
 
 
+class MensajeBody(BaseModel):
+    mensaje: str
+
+
 class ReemplazaBody(BaseModel):
     reemplazaId: Optional[str] = None
 
@@ -89,7 +93,7 @@ def detalle(sid: str):
 @app.post("/api/solicitudes")
 async def crear(
     titulo: str = Form(...),
-    remitente: str = Form(...),
+    remitente: str = Form("Solicitante"),
     area: str = Form(...),
     tipo: str = Form(...),
     contenido: str = Form(...),
@@ -222,6 +226,23 @@ def publicar(sid: str):
     if not sol:
         raise HTTPException(404, "Solicitud no encontrada")
     return _norm(service.publicar(sol))
+
+
+@app.post("/api/solicitudes/{sid}/rechazar")
+def rechazar(sid: str, body: MensajeBody):
+    sol = service.get(sid)
+    if not sol:
+        raise HTTPException(404, "Solicitud no encontrada")
+    return _norm(service.rechazar_cx(sol, body.mensaje))
+
+
+@app.post("/api/solicitudes/{sid}/consejo_rechazo")
+def consejo_rechazo(sid: str):
+    sol = service.get(sid)
+    if not sol:
+        raise HTTPException(404, "Solicitud no encontrada")
+    texto = service.generar_consejo_rechazo(sol)
+    return {"consejo": texto}
 
 
 # ---------------------------------------------------------------------------

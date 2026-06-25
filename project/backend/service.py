@@ -25,7 +25,7 @@ def _aplicar_severidad(sol, res, etiqueta_paso):
         return
     sol["requiereRevisionHumana"] = True
     if sol.get("tipoRiesgo", "normal") in ("", "normal"):
-        sol["tipoRiesgo"] = "crítico — bloqueo" if nivel == "critico" else "alerta normativa"
+        sol["tipoRiesgo"] = "critico - bloqueo" if nivel == "critico" else "alerta normativa"
     log(sol, "Agente IA",
         f"{etiqueta_paso}: nivel '{nivel or 'alerta'}' — escalado a revisión humana "
         f"(acción sugerida: {res.get('accion', 'escalar')}).")
@@ -45,6 +45,7 @@ def crear_solicitud(titulo, remitente, area, tipo, contenido, asesor, imagenes):
         "titulo": titulo or f"Comunicación {tipo}",
         "remitente": remitente or "Solicitante",
         "fecha": hoy(),
+        "fechaCreacion": ahora(),
         "area": area or "Productos",
         "tipo": tipo or "SMS",
         "contenidoOriginal": contenido,
@@ -239,7 +240,16 @@ def revalidar_paso4(sol, contenido):
 def _avanzar_a_paso5(sol):
     sol["estados"]["paso5"] = "wait"
     sol["brief"] = agents.generar_brief(sol)
-    log(sol, "Agente IA", "Paso 5: brief generado. En espera de aprobación CX.")
+    # Auto-aprobacion si no requiere revision humana y todos los pasos previos estan ok
+    if not sol.get("requiereRevisionHumana"):
+        all_ok = all(sol["estados"].get(f"paso{i}") == "ok" for i in range(1, 5))
+        if all_ok:
+            sol["aprobadoCX"] = True
+            sol["publicado"] = True
+            sol["estados"]["paso5"] = "ok"
+            log(sol, "Sistema", "Aprobacion automatica por IA - todos los agentes aprobaron sin observaciones.")
+            return sol
+    log(sol, "Agente IA", "Paso 5: brief generado. En espera de aprobacion CX.")
     return sol
 
 
@@ -267,5 +277,18 @@ def publicar(sol):
     if not sol.get("aprobadoCX"):
         return sol
     sol["publicado"] = True
-    log(sol, "Solicitante", "Publicó la comunicación.")
+    log(sol, "Solicitante", "Publico la comunicacion.")
     return sol
+
+
+def rechazar_cx(sol, mensaje: str):
+    sol["aprobadoCX"] = False
+    sol["estados"]["paso5"] = "obs"
+    sol["mensajeRechazo"] = mensaje
+    log(sol, "CX", f"Rechazo con observaciones: {mensaje}")
+    paso_actual(sol)
+    return sol
+
+
+def generar_consejo_rechazo(sol) -> str:
+    return agents.generar_consejo_rechazo(sol)
