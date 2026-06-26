@@ -43,7 +43,7 @@ const STEPS = [
   { n: 5, lbl: 'Brief + Aprobación CX', Ic: ClipboardCheck },
 ]
 const ST_TXT = { ok: 'Completado', obs: 'Observado', proc: 'En proceso', wait: 'Esperando CX', locked: 'Pendiente' }
-const TIPOS = ['SMS', 'Email', 'WhatsApp', 'Push notification', 'Carta', 'Speech', 'Banner', 'Pieza grafica']
+const TIPOS = ['SMS', 'Email', 'WhatsApp', 'Push notification', 'Pieza visual', 'Documento', 'Otro']
 
 // Isotipo Mibanco: sol amarillo con rayos triangulares — reutilizado en mockups de canal.
 function Sol({ cls = 'sol', label }) {
@@ -1232,92 +1232,68 @@ function BeforeAfter({ sol, antes, despues, lblAntes = 'Versión actual', lblDes
 function NuevaModal({ onClose, onCrear, onImportar }) {
   const AREA = 'Productos'
   const NOMBRE = 'Solicitante'
-  const [modo, setModo] = useState('escribir')
   const [tipo, setTipo] = useState('SMS')
+  const [tipoCustom, setTipoCustom] = useState('')
   const [titulo, setTitulo] = useState('')
   const [contenido, setContenido] = useState('')
   const [asesorNombre, setAsesorNombre] = useState('')
-  const [asesorTelefono, setAsesorTelefono] = useState('')
   const [adjuntos, setAdjuntos] = useState([])
 
   function submit() {
-    if (modo === 'msg') {
-      const msgFile = adjuntos.find(f => f.name.toLowerCase().endsWith('.msg'))
-      if (!msgFile) { alert('Selecciona un archivo .msg de Outlook.'); return }
-      onImportar(msgFile, AREA)
-      return
-    }
+    const msgFile = adjuntos.find(f => f.name.toLowerCase().endsWith('.msg'))
+    if (msgFile) { onImportar(msgFile, AREA); return }
     if (!contenido.trim()) { alert('Escribe el contenido de la comunicacion.'); return }
+    if (tipo === 'Otro' && !tipoCustom.trim()) { alert('Especifica el tipo de pieza.'); return }
+    const tipoFinal = tipo === 'Otro' ? tipoCustom.trim() : tipo
     const fd = new FormData()
-    fd.append('titulo', titulo || `Comunicacion ${tipo}`)
+    fd.append('titulo', titulo || `Comunicacion ${tipoFinal}`)
     fd.append('remitente', NOMBRE)
     fd.append('area', AREA)
-    fd.append('tipo', tipo)
+    fd.append('tipo', tipoFinal)
     fd.append('contenido', contenido)
     fd.append('asesorNombre', asesorNombre)
-    fd.append('asesorTelefono', asesorTelefono)
     adjuntos.filter(f => f.type.startsWith('image/')).forEach(f => fd.append('imagenes', f))
     onCrear(fd)
   }
 
   const adjNombres = adjuntos.map(f => f.name).join(', ')
+  const hasMsgFile = adjuntos.some(f => f.name.toLowerCase().endsWith('.msg'))
 
   return (
     <Modal title="Nueva solicitud de comunicacion" onClose={onClose}
       footer={<>
         <button className="btn ghost" onClick={onClose}>Cancelar</button>
-        <button className="btn primary" onClick={submit}>{modo === 'msg' ? 'Importar y validar con IA' : 'Enviar y validar con IA'}</button>
+        <button className="btn primary" onClick={submit}>{hasMsgFile ? 'Importar y validar con IA' : 'Enviar y validar con IA'}</button>
       </>}>
 
       <div className="identity-strip">
         Solicitando como: <b>{NOMBRE}</b> - Area <b>{AREA}</b>
       </div>
 
-      <div className="segmented">
-        <button className={modo === 'escribir' ? 'active' : ''} onClick={() => setModo('escribir')}>
-          <PenLine size={14} style={{ marginRight: 5 }} />Escribir mensaje
-        </button>
-        <button className={modo === 'msg' ? 'active' : ''} onClick={() => setModo('msg')}>
-          <Mail size={14} style={{ marginRight: 5 }} />Adjuntar correo (.msg)
-        </button>
-      </div>
-
-      {modo === 'escribir' ? (
+      <label className="fld">Tipo de pieza</label>
+      <select value={tipo} onChange={e => setTipo(e.target.value)}>{TIPOS.map(t => <option key={t}>{t}</option>)}</select>
+      {tipo === 'Otro' && (
         <>
-          <label className="fld">Tipo de pieza</label>
-          <select value={tipo} onChange={e => setTipo(e.target.value)}>{TIPOS.map(t => <option key={t}>{t}</option>)}</select>
-          <label className="fld">Titulo</label>
-          <input type="text" value={titulo} onChange={e => setTitulo(e.target.value)} placeholder={`Comunicacion ${tipo}`} />
-          <label className="fld">Contenido del mensaje</label>
-          <textarea value={contenido} onChange={e => setContenido(e.target.value)} placeholder="Escribe el mensaje a validar..." style={{ minHeight: 110 }} />
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-            <div><label className="fld">Asesor (nombre)</label><input type="text" value={asesorNombre} onChange={e => setAsesorNombre(e.target.value)} placeholder="Luis Perez" /></div>
-            <div><label className="fld">Asesor (telefono)</label><input type="text" value={asesorTelefono} onChange={e => setAsesorTelefono(e.target.value)} placeholder="987 654 321" /></div>
-          </div>
-          <label className="fld">Archivos adjuntos <span style={{ fontWeight: 600, color: 'var(--gray-d)' }}>(imagenes para validacion de marca)</span></label>
-          <label className="adj-drop">
-            <input type="file" accept=".msg,.pdf,.docx,.png,.jpg,.jpeg,.gif,image/*" multiple style={{ display: 'none' }}
-              onChange={e => setAdjuntos(Array.from(e.target.files))} />
-            <div className="adj-file-row">
-              <Upload size={14} />
-              <span>{adjuntos.length > 0 ? adjNombres : 'Seleccionar archivos (.msg, PDF, DOCX, imagenes)'}</span>
-            </div>
-          </label>
-        </>
-      ) : (
-        <>
-          <label className="fld">Archivos adjuntos <span style={{ fontWeight: 600, color: 'var(--gray-d)' }}>(correo .msg de Outlook)</span></label>
-          <label className="adj-drop">
-            <input type="file" accept=".msg" style={{ display: 'none' }}
-              onChange={e => setAdjuntos(e.target.files[0] ? [e.target.files[0]] : [])} />
-            <div className="adj-file-row">
-              <Mail size={14} />
-              <span>{adjuntos.length > 0 ? adjuntos[0].name : 'Seleccionar archivo .msg de Outlook'}</span>
-            </div>
-          </label>
-          {adjuntos.length > 0 && <div style={{ fontSize: 11, color: 'var(--gray-d)', marginTop: 4 }}>Se extraera asunto, remitente, cuerpo e imagenes del correo.</div>}
+          <label className="fld">Especifica el tipo de pieza</label>
+          <input type="text" value={tipoCustom} onChange={e => setTipoCustom(e.target.value)} placeholder="Describe el tipo de comunicacion..." />
         </>
       )}
+      <label className="fld">Titulo</label>
+      <input type="text" value={titulo} onChange={e => setTitulo(e.target.value)} placeholder={`Comunicacion ${tipo === 'Otro' ? (tipoCustom || 'personalizado') : tipo}`} />
+      <label className="fld">Contenido del mensaje</label>
+      <textarea value={contenido} onChange={e => setContenido(e.target.value)} placeholder="Escribe el mensaje a validar..." style={{ minHeight: 110 }} />
+      <label className="fld">Asesor (nombre)</label>
+      <input type="text" value={asesorNombre} onChange={e => setAsesorNombre(e.target.value)} placeholder="Luis Perez" />
+      <label className="fld">Archivos adjuntos <span style={{ fontWeight: 600, color: 'var(--gray-d)' }}>(imagenes para validacion de marca)</span></label>
+      <label className="adj-drop">
+        <input type="file" accept=".msg,.pdf,.docx,.png,.jpg,.jpeg,.gif,image/*" multiple style={{ display: 'none' }}
+          onChange={e => setAdjuntos(Array.from(e.target.files))} />
+        <div className="adj-file-row">
+          <Upload size={14} />
+          <span>{adjuntos.length > 0 ? adjNombres : 'Seleccionar archivos (.msg, PDF, DOCX, imagenes)'}</span>
+        </div>
+      </label>
+      {hasMsgFile && <div style={{ fontSize: 11, color: 'var(--gray-d)', marginTop: 4 }}>Se extraera asunto, remitente, cuerpo e imagenes del correo .msg.</div>}
     </Modal>
   )
 }
