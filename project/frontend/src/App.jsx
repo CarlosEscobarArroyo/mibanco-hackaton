@@ -604,13 +604,20 @@ function StepModal({ sol, step, vista, onClose, actions }) {
 
   // ---- PASO 2 ----
   if (step === 2) {
-    if (e(2) === 'ok') return (
-      <Modal title="Paso 2 · Validación de redacción (IA)" chip={chip} onClose={onClose}
-        footer={<button className="btn ghost" onClick={onClose}>Cerrar</button>}>
-        <div className="note ok">El agente IA revisó tono, claridad, simplicidad y formato. Sin observaciones. ✔</div>
-        <PreviewPanel sol={sol} texto={sol.contenidoActual} />
-      </Modal>
-    )
+    if (e(2) === 'ok') {
+      const corr2 = sol.feedbackPaso2?.contenidoCorregido || ''
+      const huboCambios2 = !!corr2.trim() && corr2.trim() !== (sol.contenidoOriginal || '').trim()
+      return (
+        <Modal title="Paso 2 · Validación de redacción (IA)" chip={chip} onClose={onClose} wide
+          footer={<button className="btn ghost" onClick={onClose}>Cerrar</button>}>
+          <div className="note ok">{huboCambios2
+            ? 'Se aplicó la corrección de redacción sugerida por la IA. ✔'
+            : 'El agente IA revisó tono, claridad, simplicidad y formato. Sin observaciones. ✔'}</div>
+          <BeforeAfter sol={sol} antes={sol.contenidoOriginal} despues={corr2 || sol.contenidoOriginal}
+            lblAntes="Versión original" lblDespues="Versión corregida por IA" />
+        </Modal>
+      )
+    }
     const fb = sol.feedbackPaso2 || {}
     return (
       <Modal title="Paso 2 · Validación de redacción (IA)" chip={chip} onClose={onClose} wide
@@ -706,14 +713,22 @@ function StepModal({ sol, step, vista, onClose, actions }) {
 
   // ---- PASO 4 ----
   if (step === 4) {
-    if (e(4) === 'ok') return (
-      <Modal title="Paso 4 · Validación legal y cumplimiento" chip={chip} onClose={onClose}
-        footer={<button className="btn ghost" onClick={onClose}>Cerrar</button>}>
-        <div className="note ok">Revisión de normativa, riesgos y cumplimiento completada. Sin observaciones. ✔</div>
-        <ul className="chk"><li>Sin datos sensibles expuestos</li><li>No promete de más / no parece fraude</li><li>Cumple normativa aplicable</li></ul>
-        <PreviewPanel sol={sol} texto={sol.contenidoActual} />
-      </Modal>
-    )
+    if (e(4) === 'ok') {
+      const base4 = sol.feedbackPaso2?.contenidoCorregido || sol.contenidoOriginal
+      const corr4 = sol.feedbackPaso4?.contenidoCorregido || ''
+      const huboCambios4 = !!corr4.trim() && corr4.trim() !== (base4 || '').trim()
+      return (
+        <Modal title="Paso 4 · Validación legal y cumplimiento" chip={chip} onClose={onClose} wide
+          footer={<button className="btn ghost" onClick={onClose}>Cerrar</button>}>
+          <div className="note ok">{huboCambios4
+            ? 'Se aplicó el ajuste legal sugerido por la IA. ✔'
+            : 'Revisión de normativa, riesgos y cumplimiento completada. Sin observaciones. ✔'}</div>
+          <ul className="chk"><li>Sin datos sensibles expuestos</li><li>No promete de más / no parece fraude</li><li>Cumple normativa aplicable</li></ul>
+          <BeforeAfter sol={sol} antes={base4} despues={corr4 || base4}
+            lblAntes="Versión antes de legal" lblDespues="Versión ajustada (legal)" />
+        </Modal>
+      )
+    }
     const lg = sol.feedbackPaso4 || {}
     return (
       <Modal title="Paso 4 · Validación legal y cumplimiento" chip={chip} onClose={onClose} wide
