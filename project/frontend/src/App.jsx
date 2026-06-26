@@ -660,8 +660,8 @@ function StepModal({ sol, step, vista, onClose, actions }) {
         footer={<button className="btn ghost" onClick={onClose}>Cerrar</button>}>
         <RoleTip>
           {vista === 'sol'
-            ? <><Eye size={13} style={{ marginRight: 5 }} />Solo lectura: el equipo CX gestiona la corrección de imágenes.</>
-            : <><PenLine size={13} style={{ marginRight: 5 }} />Vista CX: para cada imagen con observaciones, sube la versión corregida y el agente la revalidará automáticamente.</>}
+            ? <><PenLine size={13} style={{ marginRight: 5 }} />Como SOLICITANTE: revisa cada imagen. Si hay observaciones, sube una nueva versión y el agente la validará.</>
+            : <><Eye size={13} style={{ marginRight: 5 }} />Vista CX: monitoreo. El reemplazo de imágenes lo hace el área solicitante.</>}
         </RoleTip>
         <div className={'note' + (allOk ? ' ok' : ' bad')}>El agente comparó cada imagen contra las referencias de branding (logo, colores institucionales, proporciones).</div>
         <div className="img-row">
