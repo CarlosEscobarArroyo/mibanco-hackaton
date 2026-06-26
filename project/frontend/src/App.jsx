@@ -1358,9 +1358,9 @@ function Donut({ segments, size = 176, stroke = 28, centerTop, centerBottom }) {
             const len = (s.value / total) * c
             const off = -acc
             acc += len
-            return <circle key={i} cx={size / 2} cy={size / 2} r={r} fill="none" stroke={s.color}
+            return <circle key={i} cx={size / 2} cy={size / 2} r={r} fill="none"
               strokeWidth={stroke} strokeDasharray={`${len} ${c - len}`} strokeDashoffset={off}
-              className="donut-seg" style={{ ['--di']: i }} />
+              className="donut-seg" style={{ stroke: s.color, '--di': i }} />
           })}
         </g>
       </svg>
@@ -1525,7 +1525,31 @@ function Dashboard({ lista, cfg, onRefresh, onVerCX }) {
         </div>
       </div>
 
-      {/* Fila 4: Tabla de atencion ordenada por antiguedad */}
+      {/* Fila 4: Por área solicitante */}
+      {areas.length > 0 && (
+        <div className="panel">
+          <div className="panel-h"><h3>Por área solicitante</h3><span className="panel-s">distribución por estado</span></div>
+          <div className="cbars">
+            {areas.map(a => (
+              <div key={a.k} className="cbar-row">
+                <div className="cbar-name">{a.k}</div>
+                <CompBar segments={areaSegs(a.k)} total={a.v} max={maxArea} />
+                <div className="cbar-val">{a.v}</div>
+              </div>
+            ))}
+          </div>
+          <div className="cbar-legend">
+            {ESTADO_META.filter(m => areas.some(a => areaSegs(a.k).find(s => s.lbl === m.lbl && s.value > 0))).map(m => (
+              <div key={m.k} className="leg-item">
+                <span className="leg-dot" style={{ background: m.color }} />
+                <span className="leg-lbl">{m.lbl}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Fila 5: Tabla de atencion ordenada por antiguedad */}
       <div className="panel attn">
         <div className="panel-h">
           <h3>Requieren atención</h3>
