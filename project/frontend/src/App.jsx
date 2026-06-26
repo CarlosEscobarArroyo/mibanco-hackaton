@@ -604,16 +604,14 @@ function StepModal({ sol, step, vista, onClose, actions }) {
     const fb = sol.feedbackPaso2 || {}
     return (
       <Modal title="Paso 2 · Validación de redacción (IA)" chip={chip} onClose={onClose} wide
-        footer={vista === 'sol' && !sol.requiereRevisionHumana ? <>
+        footer={vista === 'sol' ? <>
           <button className="btn ghost" onClick={() => setOwn2(v => !v)}>{own2 ? 'Cancelar' : 'Hacer mi propia versión'}</button>
           {own2 && <button className="btn warn" onClick={() => actions.onRevalidar2(sol.id, txt2)}>Re-validar con IA</button>}
           <button className="btn primary" onClick={() => actions.onAceptar2(sol.id)}>Aceptar cambio y continuar</button>
         </> : <button className="btn ghost" onClick={onClose}>Cerrar</button>}>
         <RoleTip>
           {vista === 'sol'
-            ? sol.requiereRevisionHumana
-              ? <><Eye size={13} style={{ marginRight: 5 }} />Solo lectura: el equipo CX debe revisar esta comunicación antes de que puedas aplicar cambios.</>
-              : <><PenLine size={13} style={{ marginRight: 5 }} />Como SOLICITANTE: revisa la propuesta del agente y decide. Acepta el cambio o escribe tu propia versión para re-validar.</>
+            ? <><PenLine size={13} style={{ marginRight: 5 }} />Como SOLICITANTE: revisa la propuesta del agente y decide. Acepta el cambio o escribe tu propia versión para re-validar.{sol.requiereRevisionHumana ? ' Esta pieza es de riesgo alto: CX dará la aprobación final en el Paso 5.' : ''}</>
             : <><Eye size={13} style={{ marginRight: 5 }} />Vista CX: monitoreo. La acción de aceptar/editar la realiza el área solicitante.</>}
         </RoleTip>
         <div className="note bad"><b>El agente detectó observaciones en la redacción:</b>
@@ -622,7 +620,7 @@ function StepModal({ sol, step, vista, onClose, actions }) {
         </div>
         <BeforeAfter sol={sol} antes={sol.contenidoOriginal} despues={fb.contenidoCorregido}
           lblAntes="Versión original" lblDespues="Versión corregida por IA" />
-        {own2 && vista === 'sol' && !sol.requiereRevisionHumana && (
+        {own2 && vista === 'sol' && (
           <div style={{ marginTop: 12 }}>
             <label className="fld">Escribe tu propia versión:</label>
             <textarea value={txt2} onChange={ev => setTxt2(ev.target.value)} />
@@ -680,7 +678,7 @@ function StepModal({ sol, step, vista, onClose, actions }) {
                 {!im.ok && (im.sugerencias || []).length > 0 && (
                   <ul className="chk" style={{ fontSize: 11 }}>{im.sugerencias.map((s, i) => <li key={i}>{s}</li>)}</ul>
                 )}
-                {!im.ok && vista === 'sol' && !sol.requiereRevisionHumana && (
+                {!im.ok && vista === 'sol' && (
                   <label className="btn warn" style={{ marginTop: 8, width: '100%', textAlign: 'center', display: 'block' }}>
                     Subir nueva imagen
                     <input type="file" accept="image/*" style={{ display: 'none' }}
@@ -709,16 +707,14 @@ function StepModal({ sol, step, vista, onClose, actions }) {
     const lg = sol.feedbackPaso4 || {}
     return (
       <Modal title="Paso 4 · Validación legal y cumplimiento" chip={chip} onClose={onClose} wide
-        footer={vista === 'sol' && !sol.requiereRevisionHumana ? <>
+        footer={vista === 'sol' ? <>
           <button className="btn ghost" onClick={() => setOwn4(v => !v)}>{own4 ? 'Cancelar' : 'Hacer mi propia versión'}</button>
           {own4 && <button className="btn warn" onClick={() => actions.onRevalidar4(sol.id, txt4)}>Re-validar con Legal</button>}
           <button className="btn primary" onClick={() => actions.onAceptar4(sol.id)}>Aceptar ajuste y continuar</button>
         </> : <button className="btn ghost" onClick={onClose}>Cerrar</button>}>
         <RoleTip>
           {vista === 'sol'
-            ? sol.requiereRevisionHumana
-              ? <><Eye size={13} style={{ marginRight: 5 }} />Solo lectura: el equipo CX debe revisar esta comunicación antes de que puedas aplicar cambios.</>
-              : <><PenLine size={13} style={{ marginRight: 5 }} />Como SOLICITANTE: revisa las observaciones legales. Acepta el ajuste sugerido o escribe tu propia versión para re-validar.</>
+            ? <><PenLine size={13} style={{ marginRight: 5 }} />Como SOLICITANTE: revisa las observaciones legales. Acepta el ajuste sugerido o escribe tu propia versión para re-validar.{sol.requiereRevisionHumana ? ' Esta pieza es de riesgo alto: CX dará la aprobación final en el Paso 5.' : ''}</>
             : <><Eye size={13} style={{ marginRight: 5 }} />Vista CX: monitoreo. El ajuste por temas legales lo realiza el área solicitante.</>}
         </RoleTip>
         <div className="note bad"><b>Legal y Cumplimiento detectó observaciones:</b>
@@ -727,7 +723,7 @@ function StepModal({ sol, step, vista, onClose, actions }) {
         </div>
         <BeforeAfter sol={sol} antes={sol.contenidoActual} despues={lg.contenidoCorregido}
           lblAntes="Versión actual" lblDespues="Versión ajustada (legal)" />
-        {own4 && vista === 'sol' && !sol.requiereRevisionHumana && (
+        {own4 && vista === 'sol' && (
           <div style={{ marginTop: 12 }}>
             <label className="fld">Escribe tu propia versión:</label>
             <textarea value={txt4} onChange={ev => setTxt4(ev.target.value)} />
