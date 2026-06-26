@@ -285,8 +285,25 @@ export default function App() {
   return (
     <>
       <header>
-        <span className="logo"><MibancoLogo /></span>
-        <span className="sub">Validación de Comunicaciones · IA Multiagente</span>
+        <div style={{ display:'flex', alignItems:'center', gap:0 }}>
+          <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+            <svg height="44" viewBox="0 0 88 103.02" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style={{ flexShrink:0 }}>
+              <path fill="#F7D417" d="M17.32,65.28c-0.79-3.47-1.05-6.91-0.83-10.28L2.65,64.45c-3.99,2.71-3.42,5.51,1.3,6.46l16.74,3.4C19.22,71.53,18.07,68.51,17.32,65.28z"/>
+              <path fill="#F7D417" d="M44.17,22.05c3.01-0.72,6.04-1.05,8.98-0.99L43.2,4.62c-4.19-6.89-8.1-5.96-8.71,2.08l-1.53,20.15C36.32,24.67,40.07,23.01,44.17,22.05z"/>
+              <path fill="#F7D417" d="M80.9,34.68l7.17-26.63c2.29-8.41-1.16-10.5-7.62-4.68L60.01,21.8C68.23,23.52,75.65,28.09,80.9,34.68z"/>
+              <path fill="#F7D417" d="M17.55,48.23c1.72-6.69,5.34-12.76,10.38-17.47l-17.48-4.83c-7.77-2.13-9.97,1.23-4.89,7.49L17.55,48.23z"/>
+              <path fill="#F7D417" d="M83.67,75.72c-1.93,3.21-4.32,6.15-7.15,8.64l3.99,1.18c7.75,2.29,9.99-1.03,5.06-7.39L83.67,75.72z"/>
+              <path fill="#F7D417" d="M25.74,81.46l-2.5,14.22c-0.85,4.74,1.57,6.3,5.53,3.59l11.71-7.98C34.84,89.3,29.77,85.9,25.74,81.46z"/>
+              <path fill="#F7D417" d="M61.03,92.4c-2.59,0.62-5.12,0.93-7.64,0.99l5.23,7.11c2.86,3.89,5.64,3.21,6.42-1.54l1.38-8.31C64.7,91.38,62.88,91.96,61.03,92.4z"/>
+            </svg>
+            <span style={{ fontFamily:"'Nunito',sans-serif", fontWeight:800, fontSize:26, color:'#FFFFFF', letterSpacing:'-0.3px', lineHeight:1 }}>mibanco</span>
+          </div>
+          <div style={{ width:1, height:20, background:'rgba(255,255,255,0.3)', margin:'0 16px', flexShrink:0 }} />
+          <span style={{ fontSize:13, color:'#fff', whiteSpace:'nowrap' }}>
+            <span style={{ fontWeight:600 }}>Garra IA</span>
+            <span style={{ fontWeight:400, opacity:0.75 }}> · Validación de Comunicaciones</span>
+          </span>
+        </div>
         <span className="spacer"></span>
         {cfg && (
           <span className="envtag">
