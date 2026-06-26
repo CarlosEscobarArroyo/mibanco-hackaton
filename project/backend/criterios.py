@@ -119,12 +119,13 @@ BRANDING = {
     "verde": "#009639",
     "amarillo": "#FFC40C",
     "descripcion": (
-        "El logo de Mibanco es un sol (isotipo) en amarillo institucional (#FFC40C). "
-        "Los colores oficiales de la marca son el verde Mibanco (#009639) y el amarillo "
-        "(#FFC40C). El isotipo del sol normalmente va en amarillo sobre fondo verde. "
-        "Las piezas gráficas deben respetar la paleta oficial, mantener buenas proporciones, "
-        "ser legibles y estar correctamente alineadas con la identidad de marca. "
-        "No se permiten verdes o amarillos fuera de paleta, ni logos distorsionados."
+        "El logo de Mibanco es un sol (isotipo) en amarillo dorado junto al texto 'mibanco' en verde. "
+        "Los colores oficiales son el verde Mibanco (aprox. #009639) y el amarillo del sol "
+        "(aprox. #FFC40C–#F8D000); son referencias, no exige un HEX exacto. El isotipo del sol puede ir "
+        "en amarillo sobre fondo verde o sobre fondo claro. Las piezas deben tener el logo correcto y "
+        "legible y buenas proporciones. Las fotografías de marketing y las capturas de la app contienen "
+        "muchos colores naturales y eso es normal; solo se considera infracción el uso claramente "
+        "equivocado del logo o de los colores de marca."
     ),
 }
 
