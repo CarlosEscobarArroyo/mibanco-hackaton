@@ -182,6 +182,37 @@ def clasificar(tipo: str, contenido: str) -> dict:
 # ---------------------------------------------------------------------------
 # Agente 2 — Validación de redacción
 # ---------------------------------------------------------------------------
+def _texto_correccion(cc, original=""):
+    """Normaliza 'contenido_corregido' a STRING. El modelo a veces devuelve un objeto
+    {Asunto, Preheader, Cuerpo} para correos; lo convertimos a
+    'Asunto: ...\\nPreheader: ...\\n\\n<cuerpo>' para que el cuerpo quede limpio y el
+    frontend pueda separar los metadatos del cuerpo del mensaje."""
+    if isinstance(cc, dict):
+        def g(*ks):
+            for k in ks:
+                if cc.get(k):
+                    return str(cc[k]).strip()
+            return ""
+        asunto = g("Asunto", "asunto", "subject")
+        preheader = g("Preheader", "preheader")
+        cuerpo = g("Cuerpo", "cuerpo", "body", "contenido", "mensaje", "texto")
+        if not cuerpo:
+            cuerpo = "\n".join(str(v) for k, v in cc.items()
+                               if k.lower() not in ("asunto", "preheader", "subject"))
+        partes = []
+        if asunto:
+            partes.append(f"Asunto: {asunto}")
+        if preheader:
+            partes.append(f"Preheader: {preheader}")
+        txt = ("\n".join(partes) + ("\n\n" if partes else "") + cuerpo).strip()
+        return txt or (original or "")
+    if isinstance(cc, (list, tuple)):
+        return "\n".join(str(x) for x in cc)
+    if isinstance(cc, str):
+        return cc
+    return str(cc) if cc is not None else (original or "")
+
+
 def validar_redaccion(tipo: str, contenido: str, asesor: dict) -> dict:
     regla = criterios.REGLAS_CANAL.get(tipo, "Mensaje claro y breve.")
     principios = "; ".join(criterios.PRINCIPIOS_REDACCION)
@@ -232,6 +263,7 @@ def validar_redaccion(tipo: str, contenido: str, asesor: dict) -> dict:
         out.setdefault("principios_afectados", [])
         if not out.get("contenido_corregido"):
             out["contenido_corregido"] = contenido
+        out["contenido_corregido"] = _texto_correccion(out.get("contenido_corregido"), contenido)
         _normalizar_nivel(out)
         return out
     except Exception as e:
@@ -320,6 +352,7 @@ def validar_legal(contenido: str, tipo: str = "") -> dict:
         out.setdefault("normas", [])
         if not out.get("contenido_corregido"):
             out["contenido_corregido"] = contenido
+        out["contenido_corregido"] = _texto_correccion(out.get("contenido_corregido"), contenido)
         _normalizar_nivel(out)
         return out
     except Exception as e:

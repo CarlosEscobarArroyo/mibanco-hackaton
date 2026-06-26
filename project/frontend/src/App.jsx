@@ -605,8 +605,9 @@ function StepModal({ sol, step, vista, onClose, actions }) {
   // ---- PASO 2 ----
   if (step === 2) {
     if (e(2) === 'ok') {
-      const corr2 = sol.feedbackPaso2?.contenidoCorregido || ''
-      const huboCambios2 = !!corr2.trim() && corr2.trim() !== (sol.contenidoOriginal || '').trim()
+      const corr2 = sol.feedbackPaso2?.contenidoCorregido
+      const m2 = splitAsuntoPreheader(corr2)
+      const huboCambios2 = (!!m2.cuerpo.trim() && m2.cuerpo.trim() !== (sol.contenidoOriginal || '').trim()) || !!(m2.asunto || m2.preheader)
       return (
         <Modal title="Paso 2 · Validación de redacción (IA)" chip={chip} onClose={onClose} wide
           footer={<button className="btn ghost" onClick={onClose}>Cerrar</button>}>
@@ -715,8 +716,10 @@ function StepModal({ sol, step, vista, onClose, actions }) {
   if (step === 4) {
     if (e(4) === 'ok') {
       const base4 = sol.feedbackPaso2?.contenidoCorregido || sol.contenidoOriginal
-      const corr4 = sol.feedbackPaso4?.contenidoCorregido || ''
-      const huboCambios4 = !!corr4.trim() && corr4.trim() !== (base4 || '').trim()
+      const corr4 = sol.feedbackPaso4?.contenidoCorregido
+      const m4 = splitAsuntoPreheader(corr4)
+      const b4 = splitAsuntoPreheader(base4).cuerpo
+      const huboCambios4 = (!!m4.cuerpo.trim() && m4.cuerpo.trim() !== (b4 || '').trim()) || !!(m4.asunto || m4.preheader)
       return (
         <Modal title="Paso 4 · Validación legal y cumplimiento" chip={chip} onClose={onClose} wide
           footer={<button className="btn ghost" onClick={onClose}>Cerrar</button>}>
@@ -1286,9 +1289,15 @@ function DiffInline({ antes, despues, only }) {
 // El agente a veces antepone "Asunto: ..." y "Preheader: ..." al texto corregido del
 // correo. Eso NO debe inyectarse en el cuerpo: se extrae para mostrarlo como metadatos.
 function splitAsuntoPreheader(text) {
-  const out = { asunto: '', preheader: '', cuerpo: text || '' }
+  const out = { asunto: '', preheader: '', cuerpo: '' }
+  if (text && typeof text === 'object') {
+    out.asunto = text.Asunto || text.asunto || ''
+    out.preheader = text.Preheader || text.preheader || ''
+    out.cuerpo = text.Cuerpo || text.cuerpo || text.body || text.contenido || ''
+    return out
+  }
   if (!text) return out
-  let t = text
+  let t = String(text)
   const ma = t.match(/^\s*asunto\s*:\s*([\s\S]*?)(?=\s*(?:preheader\s*:|\n\s*\n|hola[\s,{]|estimad|$))/i)
   if (ma) { out.asunto = ma[1].trim(); t = t.slice(ma[0].length) }
   const mp = t.match(/^\s*preheader\s*:\s*([\s\S]*?)(?=\s*(?:\n\s*\n|hola[\s,{]|estimad|$))/i)
