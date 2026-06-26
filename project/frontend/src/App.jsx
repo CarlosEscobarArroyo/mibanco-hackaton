@@ -130,6 +130,7 @@ function LoadingModal({ message }) {
 function estadoBadge(r, vista) {
   if (r.publicado) return { cls: 'b-pub', txt: 'Publicado' }
   if (r.aprobadoCX) return { cls: 'b-pub', txt: vista === 'sol' ? 'Aprobado · listo para publicar' : 'Aprobado' }
+  if (r.mensajeRechazo && r.estados?.paso5 === 'obs') return { cls: 'b-obs', txt: 'Rechazado por CX' }
   const e = Object.values(r.estados || {})
   if (e.includes('obs')) return { cls: 'b-obs', txt: 'Con observaciones' }
   if (e.includes('wait')) return { cls: 'b-proc', txt: vista === 'sol' ? 'Esperando aprobación CX' : 'Pendiente de tu aprobación' }
@@ -455,6 +456,16 @@ function Detalle({ sol, vista, onOpenStep, pending }) {
           <div>
             <b>Esta comunicación requiere revisión humana obligatoria</b>
             <div style={{ fontSize:12, color:'#6B7280', marginTop:3 }}>{motivoRevision(sol.tipoRiesgo)}</div>
+          </div>
+        </div>
+      )}
+
+      {sol.estados?.paso5 === 'obs' && sol.mensajeRechazo && (
+        <div className="rechazo-banner-sol">
+          <span aria-hidden="true" style={{ color: '#E63946', flexShrink: 0, marginTop: 1 }}><AlertCircle size={18} /></span>
+          <div>
+            <b>{vista === 'sol' ? 'CX rechazó tu solicitud con observaciones' : 'Solicitud rechazada por CX'}</b>
+            <div style={{ fontSize: 12, color: '#6B7280', marginTop: 3, whiteSpace: 'pre-wrap' }}>{sol.mensajeRechazo}</div>
           </div>
         </div>
       )}
@@ -811,6 +822,12 @@ function StepModal({ sol, step, vista, onClose, actions }) {
           <button className="btn ghost" onClick={onClose}>Cerrar</button>
           <button className="btn primary" onClick={() => actions.onPublicar(sol.id)}>Publicar comunicación</button>
         </>}>{brief}<div className="note ok">✔ CX aprobó tu solicitud. Ya puedes publicarla.</div></Modal>
+    )
+    if (sol.estados?.paso5 === 'obs' && sol.mensajeRechazo) return (
+      <Modal title="Paso 5 · Rechazado por CX" chip={chip} onClose={onClose} footer={<button className="btn ghost" onClick={onClose}>Cerrar</button>}>
+        <div className="note bad"><b>El equipo CX rechazó tu solicitud con observaciones:</b><br />{sol.mensajeRechazo}</div>
+        {brief}
+      </Modal>
     )
     return <Modal title="Paso 5 · Esperando aprobación CX" chip={chip} onClose={onClose} footer={<button className="btn ghost" onClick={onClose}>Cerrar</button>}>{brief}<div className="note">Tu solicitud está completa y a la espera de la aprobación del equipo CX.</div></Modal>
   }
