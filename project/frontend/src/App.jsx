@@ -165,7 +165,7 @@ function tiempoEspera(sol) {
   const diffDias = Math.floor(diffHrs / 24)
   if (diffMin < 60) return { txt: `Hace ${diffMin} minuto${diffMin === 1 ? '' : 's'}`, urgente: false }
   if (diffHrs < 24) return { txt: `Hace ${diffHrs} hora${diffHrs === 1 ? '' : 's'}`, urgente: false }
-  return { txt: `Hace ${diffDias} dia${diffDias === 1 ? '' : 's'}`, urgente: true }
+  return { txt: `Hace ${diffDias} dia${diffDias === 1 ? '' : 's'}`, urgente: diffDias >= 7 }
 }
 
 function motivoRevision(tipoRiesgo) {
@@ -451,8 +451,11 @@ function Detalle({ sol, vista, onOpenStep, pending }) {
       )}
       {sol.requiereRevisionHumana && vista === 'sol' && (
         <div className="rev-humana-banner-sol">
-          <span aria-hidden="true"><AlertCircle size={18} /></span>
-          <span><b>Esta solicitud requiere revisión del equipo CX</b> - {motivoRevision(sol.tipoRiesgo)}. La validación automática está completa, pero el equipo CX debe revisarla antes de aprobarla.</span>
+          <span aria-hidden="true" style={{ color:'#D97706', flexShrink:0, marginTop:1 }}><AlertTriangle size={18} /></span>
+          <div>
+            <b>Esta comunicación requiere revisión humana obligatoria</b>
+            <div style={{ fontSize:12, color:'#6B7280', marginTop:3 }}>{motivoRevision(sol.tipoRiesgo)}</div>
+          </div>
         </div>
       )}
 
@@ -553,6 +556,7 @@ function StepModal({ sol, step, vista, onClose, actions }) {
   const [txt4, setTxt4] = useState(sol.feedbackPaso4?.contenidoCorregido || sol.contenidoActual || '')
   const [rejectMode, setRejectMode] = useState(false)
   const [rejectMsg, setRejectMsg] = useState('')
+  const [rejectTab, setRejectTab] = useState('ia')
   const [consejo, setConsejo] = useState('')
   const [loadingConsejo, setLoadingConsejo] = useState(false)
   const e = (n) => sol.estados['paso' + n]
@@ -599,14 +603,16 @@ function StepModal({ sol, step, vista, onClose, actions }) {
     const fb = sol.feedbackPaso2 || {}
     return (
       <Modal title="Paso 2 · Validación de redacción (IA)" chip={chip} onClose={onClose} wide
-        footer={vista === 'sol' ? <>
+        footer={vista === 'sol' && !sol.requiereRevisionHumana ? <>
           <button className="btn ghost" onClick={() => setOwn2(v => !v)}>{own2 ? 'Cancelar' : 'Hacer mi propia versión'}</button>
           {own2 && <button className="btn warn" onClick={() => actions.onRevalidar2(sol.id, txt2)}>Re-validar con IA</button>}
           <button className="btn primary" onClick={() => actions.onAceptar2(sol.id)}>Aceptar cambio y continuar</button>
         </> : <button className="btn ghost" onClick={onClose}>Cerrar</button>}>
         <RoleTip>
           {vista === 'sol'
-            ? <><PenLine size={13} style={{ marginRight: 5 }} />Como SOLICITANTE: revisa la propuesta del agente y decide. Acepta el cambio o escribe tu propia versión para re-validar.</>
+            ? sol.requiereRevisionHumana
+              ? <><Eye size={13} style={{ marginRight: 5 }} />Solo lectura: el equipo CX debe revisar esta comunicación antes de que puedas aplicar cambios.</>
+              : <><PenLine size={13} style={{ marginRight: 5 }} />Como SOLICITANTE: revisa la propuesta del agente y decide. Acepta el cambio o escribe tu propia versión para re-validar.</>
             : <><Eye size={13} style={{ marginRight: 5 }} />Vista CX: monitoreo. La acción de aceptar/editar la realiza el área solicitante.</>}
         </RoleTip>
         <div className="note bad"><b>El agente detectó observaciones en la redacción:</b>
@@ -615,7 +621,7 @@ function StepModal({ sol, step, vista, onClose, actions }) {
         </div>
         <BeforeAfter sol={sol} antes={sol.contenidoOriginal} despues={fb.contenidoCorregido}
           lblAntes="Versión original" lblDespues="Versión corregida por IA" />
-        {own2 && vista === 'sol' && (
+        {own2 && vista === 'sol' && !sol.requiereRevisionHumana && (
           <div style={{ marginTop: 12 }}>
             <label className="fld">Escribe tu propia versión:</label>
             <textarea value={txt2} onChange={ev => setTxt2(ev.target.value)} />
@@ -673,7 +679,7 @@ function StepModal({ sol, step, vista, onClose, actions }) {
                 {!im.ok && (im.sugerencias || []).length > 0 && (
                   <ul className="chk" style={{ fontSize: 11 }}>{im.sugerencias.map((s, i) => <li key={i}>{s}</li>)}</ul>
                 )}
-                {!im.ok && vista === 'sol' && (
+                {!im.ok && vista === 'sol' && !sol.requiereRevisionHumana && (
                   <label className="btn warn" style={{ marginTop: 8, width: '100%', textAlign: 'center', display: 'block' }}>
                     Subir nueva imagen
                     <input type="file" accept="image/*" style={{ display: 'none' }}
@@ -702,14 +708,16 @@ function StepModal({ sol, step, vista, onClose, actions }) {
     const lg = sol.feedbackPaso4 || {}
     return (
       <Modal title="Paso 4 · Validación legal y cumplimiento" chip={chip} onClose={onClose} wide
-        footer={vista === 'sol' ? <>
+        footer={vista === 'sol' && !sol.requiereRevisionHumana ? <>
           <button className="btn ghost" onClick={() => setOwn4(v => !v)}>{own4 ? 'Cancelar' : 'Hacer mi propia versión'}</button>
           {own4 && <button className="btn warn" onClick={() => actions.onRevalidar4(sol.id, txt4)}>Re-validar con Legal</button>}
           <button className="btn primary" onClick={() => actions.onAceptar4(sol.id)}>Aceptar ajuste y continuar</button>
         </> : <button className="btn ghost" onClick={onClose}>Cerrar</button>}>
         <RoleTip>
           {vista === 'sol'
-            ? <><PenLine size={13} style={{ marginRight: 5 }} />Como SOLICITANTE: revisa las observaciones legales. Acepta el ajuste sugerido o escribe tu propia versión para re-validar.</>
+            ? sol.requiereRevisionHumana
+              ? <><Eye size={13} style={{ marginRight: 5 }} />Solo lectura: el equipo CX debe revisar esta comunicación antes de que puedas aplicar cambios.</>
+              : <><PenLine size={13} style={{ marginRight: 5 }} />Como SOLICITANTE: revisa las observaciones legales. Acepta el ajuste sugerido o escribe tu propia versión para re-validar.</>
             : <><Eye size={13} style={{ marginRight: 5 }} />Vista CX: monitoreo. El ajuste por temas legales lo realiza el área solicitante.</>}
         </RoleTip>
         <div className="note bad"><b>Legal y Cumplimiento detectó observaciones:</b>
@@ -718,7 +726,7 @@ function StepModal({ sol, step, vista, onClose, actions }) {
         </div>
         <BeforeAfter sol={sol} antes={sol.contenidoActual} despues={lg.contenidoCorregido}
           lblAntes="Versión actual" lblDespues="Versión ajustada (legal)" />
-        {own4 && vista === 'sol' && (
+        {own4 && vista === 'sol' && !sol.requiereRevisionHumana && (
           <div style={{ marginTop: 12 }}>
             <label className="fld">Escribe tu propia versión:</label>
             <textarea value={txt4} onChange={ev => setTxt4(ev.target.value)} />
@@ -761,30 +769,40 @@ function StepModal({ sol, step, vista, onClose, actions }) {
           {brief}
         </Modal>
       )
+      const msgFinal = rejectTab === 'ia' ? consejo : rejectMsg
       return (
         <Modal title="Paso 5 - Brief + Aprobación CX" chip={chip} onClose={onClose}
           footer={rejectMode ? <>
-            <button className="btn ghost" onClick={() => { setRejectMode(false); setConsejo('') }}>Cancelar</button>
-            <button className="btn warn" disabled={!rejectMsg.trim()} onClick={() => { actions.onRechazar(sol.id, rejectMsg); onClose() }}>Confirmar rechazo</button>
+            <button className="btn ghost" onClick={() => { setRejectMode(false); setConsejo(''); setRejectMsg(''); setRejectTab('ia') }}>Cancelar</button>
+            <button style={{ background:'#E63946', color:'#fff', border:'none', borderRadius:8, padding:'7px 16px', fontSize:13, fontWeight:600, cursor:'pointer', opacity: msgFinal.trim() ? 1 : 0.45 }}
+              disabled={!msgFinal.trim()}
+              onClick={() => { actions.onRechazar(sol.id, msgFinal); onClose() }}>Enviar rechazo</button>
           </> : <>
             <button className="btn ghost" onClick={onClose}>Cerrar</button>
-            <button className="btn warn" onClick={() => setRejectMode(true)}>Rechazar con observaciones</button>
-            <button className="btn primary" onClick={() => actions.onAprobar(sol.id)}>Aprobar solicitud</button>
+            <button style={{ background:'#fff', border:'1px solid #E63946', color:'#E63946', borderRadius:8, padding:'7px 16px', fontSize:13, fontWeight:600, cursor:'pointer' }}
+              onClick={() => setRejectMode(true)}>Rechazar y notificar al solicitante</button>
+            <button style={{ background:'#00964B', color:'#fff', border:'none', borderRadius:8, padding:'7px 16px', fontSize:13, fontWeight:600, cursor:'pointer' }}
+              onClick={() => actions.onAprobar(sol.id)}>Aprobar comunicación</button>
           </>}>
           <RoleTip><Eye size={13} style={{ marginRight: 5 }} />Vista CX: aquí es donde realmente intervienes. Revisa el brief y da el visto bueno final.</RoleTip>
           {rejectMode ? (
             <div className="rechazo-panel">
-              <div className="note bad" style={{ marginBottom: 10 }}><b>Redacta el motivo del rechazo</b> - el solicitante lo verá en su bandeja.</div>
-              <textarea value={rejectMsg} onChange={e => setRejectMsg(e.target.value)}
-                placeholder="Describe por qué se rechaza esta solicitud y qué debe corregirse..." style={{ minHeight: 80 }} />
-              {!consejo && <button className="btn ghost" style={{ marginTop: 8, fontSize: 12 }} onClick={handleGenerarConsejo} disabled={loadingConsejo}>
-                {loadingConsejo ? 'Generando...' : 'Generar sugerencia con IA'}
-              </button>}
-              {consejo && <div className="consejo-box">
-                <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--gray-d)', marginBottom: 4 }}>SUGERENCIA IA:</div>
-                <div style={{ fontSize: 13, lineHeight: 1.55 }}>{consejo}</div>
-                <button className="btn ghost" style={{ marginTop: 8, fontSize: 12 }} onClick={() => setRejectMsg(consejo)}>Usar esta sugerencia</button>
-              </div>}
+              <div style={{ fontSize:13, fontWeight:700, color:'var(--ink)', marginBottom:10 }}>Mensaje para el solicitante</div>
+              <div className="rechazo-tabs">
+                <button className={'rtab' + (rejectTab === 'ia' ? ' active' : '')} onClick={() => setRejectTab('ia')}>Generar con IA</button>
+                <button className={'rtab' + (rejectTab === 'propio' ? ' active' : '')} onClick={() => setRejectTab('propio')}>Escribir propio</button>
+              </div>
+              {rejectTab === 'ia' ? (
+                <div>
+                  <button className="btn primary" style={{ fontSize:12, marginBottom:8 }} onClick={handleGenerarConsejo} disabled={loadingConsejo}>
+                    {loadingConsejo ? 'Generando...' : 'Generar consejo'}
+                  </button>
+                  {consejo && <textarea value={consejo} onChange={e => setConsejo(e.target.value)} style={{ height:120 }} />}
+                </div>
+              ) : (
+                <textarea value={rejectMsg} onChange={e => setRejectMsg(e.target.value)}
+                  placeholder="Escribe aquí el motivo del rechazo y las sugerencias para el solicitante..." style={{ height:120 }} />
+              )}
             </div>
           ) : brief}
         </Modal>

@@ -704,8 +704,8 @@ mark.df-del{background:#fff;color:var(--danger);text-decoration:line-through;tex
 /* BLOQUE 6 – banners de revision humana */
 .rev-humana-banner-sol{
   display:flex;gap:11px;align-items:flex-start;background:#FEF3C7;
-  border-left:4px solid #F59E0B;border-radius:var(--radius);
-  padding:12px 14px;font-size:13px;color:#92400E;margin:16px 0 0;
+  border:1px solid #F59E0B;border-radius:10px;
+  padding:12px 16px;font-size:13px;color:#92400E;margin:16px 0 0;
 }
 .rev-humana-banner-sol b{display:block;font-size:13.5px;margin-bottom:2px}
 .rev-humana-badge{
@@ -727,7 +727,13 @@ mark.df-del{background:#fff;color:var(--danger);text-decoration:line-through;tex
   display:inline-flex;align-items:center;gap:5px;
   font-size:11px;font-weight:700;color:var(--gray-d);margin-top:5px;
 }
-.req-espera.urgente{color:#C0392B;font-weight:800}
+.req-espera.urgente{color:#E63946;font-weight:800}
+
+/* BLOQUE 6 – tabs de rechazo CX */
+.rechazo-tabs{display:flex;gap:0;border:1px solid var(--line);border-radius:8px;overflow:hidden;margin-bottom:10px;width:fit-content}
+.rtab{background:#fff;border:none;padding:7px 16px;font-size:12px;font-weight:600;color:var(--gray-d);cursor:pointer;transition:background .15s,color .15s}
+.rtab.active{background:var(--brand);color:#fff}
+.rtab:hover:not(.active){background:var(--brand-50)}
 
 /* BLOQUE 3 – identity strip y archivos adjuntos */
 .identity-strip{
