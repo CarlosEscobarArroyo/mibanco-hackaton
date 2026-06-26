@@ -34,6 +34,7 @@ const Mail = ({ size = 16, ...p }) => <LI size={size} {...p}><rect width="20" he
 const AlertCircle = ({ size = 16, ...p }) => <LI size={size} {...p}><circle cx="12" cy="12" r="10" /><line x1="12" x2="12" y1="8" y2="12" /><line x1="12" x2="12.01" y1="16" y2="16" /></LI>
 const BadgeCheck = ({ size = 16, ...p }) => <LI size={size} {...p}><path d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.77 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.74 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.74z" /><path d="m9 12 2 2 4-4" /></LI>
 const Upload = ({ size = 16, ...p }) => <LI size={size} {...p}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" x2="12" y1="3" y2="15" /></LI>
+const Maximize = ({ size = 16, ...p }) => <LI size={size} {...p}><path d="M8 3H5a2 2 0 0 0-2 2v3" /><path d="M21 8V5a2 2 0 0 0-2-2h-3" /><path d="M3 16v3a2 2 0 0 0 2 2h3" /><path d="M16 21h3a2 2 0 0 0 2-2v-3" /></LI>
 
 const STEPS = [
   { n: 1, lbl: 'Recepción', Ic: Inbox },
@@ -1002,15 +1003,90 @@ function DevicePreview({ sol, texto, diffFrom = null }) {
   return <SmsMock sol={sol} texto={texto} diffFrom={diffFrom} />
 }
 
-function EmailRealPreview({ html }) {
-  if (!html) return <div className="prev-empty">No hay HTML original del correo.</div>
+// Normaliza el HTML del correo dentro del iframe: sin márgenes del body, imágenes y
+// tablas que se ajustan al ancho del marco y un scrollbar delgado. Esto elimina la
+// barra de desplazamiento horizontal que aparecía con las tablas/imágenes de 600px.
+function normalizeEmailDoc(doc) {
+  try {
+    const st = doc.createElement('style')
+    st.textContent =
+      'html,body{margin:0!important;padding:0!important;background:#fff!important;-webkit-text-size-adjust:100%}' +
+      'body{overflow-x:hidden!important}' +
+      'img{max-width:100%!important;height:auto!important}' +
+      'table{max-width:100%!important}' +
+      '::-webkit-scrollbar{width:9px;height:9px}' +
+      '::-webkit-scrollbar-thumb{background:#c7d0cb;border-radius:6px}' +
+      '::-webkit-scrollbar-thumb:hover{background:#aab4ad}' +
+      '::-webkit-scrollbar-track{background:transparent}'
+    ;(doc.head || doc.body || doc.documentElement).appendChild(st)
+  } catch (_) { }
+}
+
+// Inyecta los estilos del diff (resaltado verde/rojo) dentro del iframe del correo.
+function applyDiffStyles(d) {
+  try {
+    const st = d.createElement('style')
+    st.textContent = 'mark.df-add{background:#d8f5e3;color:#0a7a3d;border-radius:3px;padding:0 1px;text-decoration:none;font-weight:600}mark.df-del{background:#fde4e2;color:#b42318;text-decoration:line-through;border-radius:3px;padding:0 1px}'
+    ;(d.head || d.body).appendChild(st)
+  } catch (_) { }
+}
+
+// Lightbox: muestra el correo completo en una ventana grande centrada, con su propio
+// scroll. Es la vista "Ver completo" del preview en miniatura.
+function EmailLightbox({ html, title, prepareDoc, onClose }) {
+  useEffect(() => {
+    const onKey = e => { if (e.key === 'Escape') onClose() }
+    document.addEventListener('keydown', onKey)
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => { document.removeEventListener('keydown', onKey); document.body.style.overflow = prev }
+  }, [onClose])
   return (
-    <div className="email-raw-wrap">
-      <div className="raw-bar"><i /><i /><i /><span>Correo original recibido · HTML</span></div>
-      <iframe title="Correo original" className="email-raw" sandbox="allow-same-origin" srcDoc={html}
-        onLoad={e => { try { const d = e.target.contentDocument; if (d) e.target.style.height = Math.min((d.body.scrollHeight || 600) + 28, 1500) + 'px' } catch (_) { } }} />
+    <div className="lb-overlay" onClick={e => { if (e.target === e.currentTarget) onClose() }}>
+      <div className="lb-card" role="dialog" aria-modal="true" aria-label={title}>
+        <div className="lb-head">
+          <i className="lb-dot r" /><i className="lb-dot y" /><i className="lb-dot g" />
+          <span className="lb-t">{title}</span>
+          <span className="lb-hint">Esc o clic afuera para cerrar</span>
+          <button className="lb-x" aria-label="Cerrar" onClick={onClose}>×</button>
+        </div>
+        <div className="lb-body">
+          <iframe title={title} className="lb-frame" sandbox="allow-same-origin" srcDoc={html}
+            onLoad={e => { const d = e.target.contentDocument; if (d) { normalizeEmailDoc(d); if (prepareDoc) prepareDoc(d) } }} />
+        </div>
+      </div>
     </div>
   )
+}
+
+// Preview del correo: miniatura compacta (peek) SIN scroll, con degradado al pie y un
+// botón "Ver correo completo" que abre el lightbox. `prepareDoc` permite inyectar el
+// diff cuando se usa para la versión corregida por IA.
+function EmailViewer({ html, title, prepareDoc }) {
+  const [full, setFull] = useState(false)
+  if (!html) return <div className="prev-empty">No hay HTML original del correo.</div>
+  const onLoadDoc = e => { const d = e.target.contentDocument; if (d) { normalizeEmailDoc(d); if (prepareDoc) prepareDoc(d) } }
+  return (
+    <div className="email-raw-wrap">
+      <div className="raw-bar">
+        <i /><i /><i /><span>{title}</span>
+        <button className="raw-expand" onClick={() => setFull(true)} title="Ver completo"><Maximize size={12} /> Ampliar</button>
+      </div>
+      <div className="email-peek" role="button" tabIndex={0} title="Ver correo completo"
+        onClick={() => setFull(true)}
+        onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setFull(true) } }}>
+        <iframe title={title} className="email-raw peek" scrolling="no" sandbox="allow-same-origin" srcDoc={html}
+          onLoad={onLoadDoc} />
+        <div className="peek-fade" />
+        <span className="peek-cta"><Maximize size={14} /> Ver correo completo</span>
+      </div>
+      {full && <EmailLightbox html={html} title={title} prepareDoc={prepareDoc} onClose={() => setFull(false)} />}
+    </div>
+  )
+}
+
+function EmailRealPreview({ html }) {
+  return <EmailViewer html={html} title="Correo original recibido · HTML" />
 }
 
 function collectTextNodes(node, out, skip) {
@@ -1111,24 +1187,8 @@ function applyHtmlDiff(doc, antes, despues) {
 }
 
 function EmailRealDiff({ html, antes, despues }) {
-  if (!html) return <div className="prev-empty">No hay HTML original del correo.</div>
-  return (
-    <div className="email-raw-wrap">
-      <div className="raw-bar"><i /><i /><i /><span>Versión corregida por IA · sobre el correo real</span></div>
-      <iframe title="Correo corregido por IA" className="email-raw" sandbox="allow-same-origin" srcDoc={html}
-        onLoad={e => {
-          try {
-            const d = e.target.contentDocument
-            if (!d) return
-            const st = d.createElement('style')
-            st.textContent = 'mark.df-add{background:#d8f5e3;color:#0a7a3d;border-radius:3px;padding:0 1px;text-decoration:none;font-weight:600}mark.df-del{background:#fde4e2;color:#b42318;text-decoration:line-through;border-radius:3px;padding:0 1px}'
-            ;(d.head || d.body).appendChild(st)
-            applyHtmlDiff(d, antes, despues)
-            e.target.style.height = Math.min((d.body.scrollHeight || 600) + 28, 1500) + 'px'
-          } catch (_) { }
-        }} />
-    </div>
-  )
+  return <EmailViewer html={html} title="Versión corregida por IA · sobre el correo real"
+    prepareDoc={d => { applyDiffStyles(d); applyHtmlDiff(d, antes, despues) }} />
 }
 
 function PreviewPanel({ sol, texto, defaultOpen = true }) {
