@@ -95,7 +95,7 @@ function LoadingModal({ message }) {
     // no el progreso real de la operación. Por eso recorre los 5 pasos y vuelve a empezar.
     const timer = setInterval(() => {
       setActiveStep(s => (s >= 5 ? 1 : s + 1))
-    }, 500)
+    }, 600)
     return () => clearInterval(timer)
   }, [])
   return (
@@ -832,11 +832,9 @@ function StepModal({ sol, step, vista, onClose, actions }) {
     }
     if (sol.publicado) return <Modal title="Paso 5 · Publicado" chip={chip} onClose={onClose} footer={<button className="btn ghost" onClick={onClose}>Cerrar</button>}>{brief}<div className="note ok">Comunicación publicada / enviada al cliente.</div></Modal>
     if (sol.aprobadoCX) return (
-      <Modal title="Paso 5 · Aprobado · Publicar" chip={chip} onClose={onClose}
-        footer={<>
-          <button className="btn ghost" onClick={onClose}>Cerrar</button>
-          <button className="btn primary" onClick={() => actions.onPublicar(sol.id)}>Publicar comunicación</button>
-        </>}>{brief}<div className="note ok">✔ CX aprobó tu solicitud. Ya puedes publicarla.</div></Modal>
+      <Modal title="Paso 5 · Aprobado por CX" chip={chip} onClose={onClose}
+        footer={<button className="btn ghost" onClick={onClose}>Cerrar</button>}>
+        {brief}<div className="note ok">✔ CX aprobó esta comunicación.</div></Modal>
     )
     if (sol.estados?.paso5 === 'obs' && sol.mensajeRechazo) return (
       <Modal title="Paso 5 · Rechazado por CX" chip={chip} onClose={onClose} footer={<button className="btn ghost" onClick={onClose}>Cerrar</button>}>
@@ -1285,11 +1283,28 @@ function DiffInline({ antes, despues, only }) {
   })}</>
 }
 
+// El agente a veces antepone "Asunto: ..." y "Preheader: ..." al texto corregido del
+// correo. Eso NO debe inyectarse en el cuerpo: se extrae para mostrarlo como metadatos.
+function splitAsuntoPreheader(text) {
+  const out = { asunto: '', preheader: '', cuerpo: text || '' }
+  if (!text) return out
+  let t = text
+  const ma = t.match(/^\s*asunto\s*:\s*([\s\S]*?)(?=\s*(?:preheader\s*:|\n\s*\n|hola[\s,{]|estimad|$))/i)
+  if (ma) { out.asunto = ma[1].trim(); t = t.slice(ma[0].length) }
+  const mp = t.match(/^\s*preheader\s*:\s*([\s\S]*?)(?=\s*(?:\n\s*\n|hola[\s,{]|estimad|$))/i)
+  if (mp) { out.preheader = mp[1].trim(); t = t.slice(mp[0].length) }
+  out.cuerpo = (out.asunto || out.preheader) ? t.replace(/^\s+/, '') : (text || '')
+  return out
+}
+
 function BeforeAfter({ sol, antes, despues, lblAntes = 'Versión actual', lblDespues = 'Propuesta del agente' }) {
   const [verMock, setVerMock] = useState(true)
-  const cambio = (antes || '').trim() !== (despues || '').trim()
-  const adds = wordDiff(antes, despues).filter(x => x.k === 'add' && x.t.trim()).length
   const esEmailHtml = chan(sol.tipo) === 'email' && !!sol.correoHtml
+  const meta = esEmailHtml ? splitAsuntoPreheader(despues) : { asunto: '', preheader: '', cuerpo: despues }
+  const antesBody = esEmailHtml ? splitAsuntoPreheader(antes).cuerpo : antes
+  const despuesBody = meta.cuerpo
+  const cambio = (antesBody || '').trim() !== (despuesBody || '').trim()
+  const adds = wordDiff(antesBody, despuesBody).filter(x => x.k === 'add' && x.t.trim()).length
   return (
     <div className="ba">
       <div className="ba-hero">
@@ -1297,19 +1312,25 @@ function BeforeAfter({ sol, antes, despues, lblAntes = 'Versión actual', lblDes
           <span className="ba-hero-t"><span className="ba-spark">✦</span> Cambios sugeridos por el agente</span>
           {cambio && <span className="ba-count">{adds} mejora{adds === 1 ? '' : 's'} en verde</span>}
         </div>
+        {(meta.asunto || meta.preheader) && (
+          <div className="ba-meta">
+            {meta.asunto && <div className="ba-meta-row"><span className="ba-meta-k">Asunto</span><span className="ba-meta-v">{meta.asunto}</span></div>}
+            {meta.preheader && <div className="ba-meta-row"><span className="ba-meta-k">Preheader</span><span className="ba-meta-v">{meta.preheader}</span></div>}
+          </div>
+        )}
         {cambio ? (
           <div className="ba-compare">
             <div className="ba-side antes">
               <div className="ba-side-h"><span className="ba-dot del" />{lblAntes}</div>
-              <div className="ba-side-body"><DiffInline antes={antes} despues={despues} only="antes" /></div>
+              <div className="ba-side-body"><DiffInline antes={antesBody} despues={despuesBody} only="antes" /></div>
             </div>
             <div className="ba-side despues">
               <div className="ba-side-h"><span className="ba-dot add" />{lblDespues}</div>
-              <div className="ba-side-body"><DiffInline antes={antes} despues={despues} only="despues" /></div>
+              <div className="ba-side-body"><DiffInline antes={antesBody} despues={despuesBody} only="despues" /></div>
             </div>
           </div>
         ) : (
-          <div className="ba-hero-card"><span className="ba-nochange">La redacción se mantiene; el agente solo confirma el formato y la marca.</span></div>
+          <div className="ba-hero-card"><span className="ba-nochange">El cuerpo del mensaje se mantiene; el agente confirma el formato y la marca.</span></div>
         )}
         <div className="ba-legend"><span className="lg-add">texto nuevo / mejorado</span><span className="lg-del">texto original (se reemplaza)</span></div>
       </div>
@@ -1318,10 +1339,10 @@ function BeforeAfter({ sol, antes, despues, lblAntes = 'Versión actual', lblDes
         {verMock ? '▾ Ocultar' : '▸ Ver'} cómo se verá la pieza (antes → después)
       </button>
       {verMock && (esEmailHtml ? (
-        <div className="ba-stack">
+        <div className="ba-grid">
           <div className="ba-col"><div className="ba-tag antes">● {lblAntes}</div><div className="ba-stage"><EmailRealPreview html={sol.correoHtml} /></div></div>
-          <div className="ba-arrow" aria-hidden="true">↓</div>
-          <div className="ba-col"><div className="ba-tag despues">✓ {lblDespues}</div><div className="ba-stage despues"><EmailRealDiff html={sol.correoHtml} antes={antes} despues={despues} /></div></div>
+          <div className="ba-arrow" aria-hidden="true">→</div>
+          <div className="ba-col"><div className="ba-tag despues">✓ {lblDespues}</div><div className="ba-stage despues"><EmailRealDiff html={sol.correoHtml} antes={antesBody} despues={despuesBody} /></div></div>
         </div>
       ) : (
         <div className="ba-grid">
