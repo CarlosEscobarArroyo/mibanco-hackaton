@@ -1297,12 +1297,18 @@ function splitAsuntoPreheader(text) {
     return out
   }
   if (!text) return out
-  let t = String(text)
-  const ma = t.match(/^\s*asunto\s*:\s*([\s\S]*?)(?=\s*(?:preheader\s*:|\n\s*\n|hola[\s,{]|estimad|$))/i)
-  if (ma) { out.asunto = ma[1].trim(); t = t.slice(ma[0].length) }
-  const mp = t.match(/^\s*preheader\s*:\s*([\s\S]*?)(?=\s*(?:\n\s*\n|hola[\s,{]|estimad|$))/i)
-  if (mp) { out.preheader = mp[1].trim(); t = t.slice(mp[0].length) }
-  out.cuerpo = (out.asunto || out.preheader) ? t.replace(/^\s+/, '') : (text || '')
+  const lines = String(text).split('\n')
+  let i = 0
+  for (; i < lines.length; i++) {
+    const l = lines[i]
+    const ma = l.match(/^\s*asunto\s*:\s*(.*)$/i)
+    const mp = l.match(/^\s*preheader\s*:\s*(.*)$/i)
+    if (ma) { out.asunto = ma[1].trim(); continue }
+    if (mp) { out.preheader = mp[1].trim(); continue }
+    if (!l.trim() && (out.asunto || out.preheader)) continue
+    break
+  }
+  out.cuerpo = (out.asunto || out.preheader) ? lines.slice(i).join('\n').replace(/^\s+/, '') : String(text)
   return out
 }
 
