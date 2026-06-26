@@ -44,7 +44,7 @@ const STEPS = [
   { n: 5, lbl: 'Brief + Aprobación CX', Ic: ClipboardCheck },
 ]
 const ST_TXT = { ok: 'Completado', obs: 'Observado', proc: 'En proceso', wait: 'Esperando CX', locked: 'Pendiente' }
-const TIPOS = ['SMS', 'Email', 'WhatsApp', 'Push notification', 'Carta', 'Speech', 'Banner', 'Pieza grafica']
+const TIPOS = ['SMS', 'Email', 'WhatsApp', 'Push notification', 'Pieza visual', 'Documento', 'Otro']
 
 // Isotipo Mibanco: sol amarillo con rayos triangulares — reutilizado en mockups de canal.
 function Sol({ cls = 'sol', label }) {
@@ -166,15 +166,15 @@ function tiempoEspera(sol) {
   const diffDias = Math.floor(diffHrs / 24)
   if (diffMin < 60) return { txt: `Hace ${diffMin} minuto${diffMin === 1 ? '' : 's'}`, urgente: false }
   if (diffHrs < 24) return { txt: `Hace ${diffHrs} hora${diffHrs === 1 ? '' : 's'}`, urgente: false }
-  return { txt: `Hace ${diffDias} dia${diffDias === 1 ? '' : 's'}`, urgente: true }
+  return { txt: `Hace ${diffDias} dia${diffDias === 1 ? '' : 's'}`, urgente: diffDias >= 7 }
 }
 
 function motivoRevision(tipoRiesgo) {
   const t = (tipoRiesgo || '').toLowerCase()
   if (t.includes('oferta')) return 'Contiene oferta comercial'
-  if (t.includes('reclamo')) return 'Contiene informacion de reclamo'
-  if (t.includes('crisis')) return 'Comunicacion de crisis detectada'
-  return 'Requiere revision por el equipo CX'
+  if (t.includes('reclamo')) return 'Contiene información de reclamo'
+  if (t.includes('crisis')) return 'Comunicación de crisis detectada'
+  return 'Requiere revisión por el equipo CX'
 }
 
 export default function App() {
@@ -286,8 +286,25 @@ export default function App() {
   return (
     <>
       <header>
-        <span className="logo"><MibancoLogo /></span>
-        <span className="sub">Validación de Comunicaciones · IA Multiagente</span>
+        <div style={{ display:'flex', alignItems:'center', gap:0 }}>
+          <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+            <svg height="44" viewBox="0 0 88 103.02" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style={{ flexShrink:0 }}>
+              <path fill="#F7D417" d="M17.32,65.28c-0.79-3.47-1.05-6.91-0.83-10.28L2.65,64.45c-3.99,2.71-3.42,5.51,1.3,6.46l16.74,3.4C19.22,71.53,18.07,68.51,17.32,65.28z"/>
+              <path fill="#F7D417" d="M44.17,22.05c3.01-0.72,6.04-1.05,8.98-0.99L43.2,4.62c-4.19-6.89-8.1-5.96-8.71,2.08l-1.53,20.15C36.32,24.67,40.07,23.01,44.17,22.05z"/>
+              <path fill="#F7D417" d="M80.9,34.68l7.17-26.63c2.29-8.41-1.16-10.5-7.62-4.68L60.01,21.8C68.23,23.52,75.65,28.09,80.9,34.68z"/>
+              <path fill="#F7D417" d="M17.55,48.23c1.72-6.69,5.34-12.76,10.38-17.47l-17.48-4.83c-7.77-2.13-9.97,1.23-4.89,7.49L17.55,48.23z"/>
+              <path fill="#F7D417" d="M83.67,75.72c-1.93,3.21-4.32,6.15-7.15,8.64l3.99,1.18c7.75,2.29,9.99-1.03,5.06-7.39L83.67,75.72z"/>
+              <path fill="#F7D417" d="M25.74,81.46l-2.5,14.22c-0.85,4.74,1.57,6.3,5.53,3.59l11.71-7.98C34.84,89.3,29.77,85.9,25.74,81.46z"/>
+              <path fill="#F7D417" d="M61.03,92.4c-2.59,0.62-5.12,0.93-7.64,0.99l5.23,7.11c2.86,3.89,5.64,3.21,6.42-1.54l1.38-8.31C64.7,91.38,62.88,91.96,61.03,92.4z"/>
+            </svg>
+            <span style={{ fontFamily:"'Nunito',sans-serif", fontWeight:800, fontSize:26, color:'#FFFFFF', letterSpacing:'-0.3px', lineHeight:1 }}>mibanco</span>
+          </div>
+          <div style={{ width:1, height:20, background:'rgba(255,255,255,0.3)', margin:'0 16px', flexShrink:0 }} />
+          <span style={{ fontSize:13, color:'#fff', whiteSpace:'nowrap' }}>
+            <span style={{ fontWeight:600 }}>Garra IA</span>
+            <span style={{ fontWeight:400, opacity:0.75 }}> · Validación de Comunicaciones</span>
+          </span>
+        </div>
         <span className="spacer"></span>
         {cfg && (
           <span className="envtag">
@@ -355,7 +372,7 @@ export default function App() {
 
         <div className="grid">
           <div className="card">
-            <h3>{vista === 'cx' ? 'Solicitudes de todas las áreas' : 'Mis solicitudes - Area Productos'}<span className="count">{displayLista.length}</span></h3>
+            <h3>{vista === 'cx' ? 'Solicitudes de todas las áreas' : 'Mis solicitudes - Área Productos'}<span className="count">{displayLista.length}</span></h3>
             {displayLista.length === 0
               ? <div className="empty"><FileSearch size={46} style={{ opacity: .4 }} /><span>{activeFilter ? 'No hay solicitudes con ese filtro.' : 'No hay solicitudes.'}</span></div>
               : displayLista.map(r => {
@@ -430,13 +447,16 @@ function Detalle({ sol, vista, onOpenStep, pending }) {
       {sol.requiereRevisionHumana && vista === 'cx' && (
         <div className="riesgo-banner">
           <span className="ic" aria-hidden="true"><AlertTriangle size={18} /></span>
-          <span><b>Requiere revision humana obligatoria</b> - Clasificada como "{sol.tipoRiesgo}". No se auto-aprueba en los pasos de IA.</span>
+          <span><b>Requiere revisión humana obligatoria</b> - Clasificada como "{sol.tipoRiesgo}". No se auto-aprueba en los pasos de IA.</span>
         </div>
       )}
       {sol.requiereRevisionHumana && vista === 'sol' && (
         <div className="rev-humana-banner-sol">
-          <span aria-hidden="true"><AlertCircle size={18} /></span>
-          <span><b>Esta solicitud requiere revision del equipo CX</b> - {motivoRevision(sol.tipoRiesgo)}. La validacion automatica esta completa, pero el equipo CX debe revisarla antes de aprobarla.</span>
+          <span aria-hidden="true" style={{ color:'#D97706', flexShrink:0, marginTop:1 }}><AlertTriangle size={18} /></span>
+          <div>
+            <b>Esta comunicación requiere revisión humana obligatoria</b>
+            <div style={{ fontSize:12, color:'#6B7280', marginTop:3 }}>{motivoRevision(sol.tipoRiesgo)}</div>
+          </div>
         </div>
       )}
 
@@ -537,6 +557,7 @@ function StepModal({ sol, step, vista, onClose, actions }) {
   const [txt4, setTxt4] = useState(sol.feedbackPaso4?.contenidoCorregido || sol.contenidoActual || '')
   const [rejectMode, setRejectMode] = useState(false)
   const [rejectMsg, setRejectMsg] = useState('')
+  const [rejectTab, setRejectTab] = useState('ia')
   const [consejo, setConsejo] = useState('')
   const [loadingConsejo, setLoadingConsejo] = useState(false)
   const e = (n) => sol.estados['paso' + n]
@@ -583,14 +604,16 @@ function StepModal({ sol, step, vista, onClose, actions }) {
     const fb = sol.feedbackPaso2 || {}
     return (
       <Modal title="Paso 2 · Validación de redacción (IA)" chip={chip} onClose={onClose} wide
-        footer={vista === 'sol' ? <>
+        footer={vista === 'sol' && !sol.requiereRevisionHumana ? <>
           <button className="btn ghost" onClick={() => setOwn2(v => !v)}>{own2 ? 'Cancelar' : 'Hacer mi propia versión'}</button>
           {own2 && <button className="btn warn" onClick={() => actions.onRevalidar2(sol.id, txt2)}>Re-validar con IA</button>}
           <button className="btn primary" onClick={() => actions.onAceptar2(sol.id)}>Aceptar cambio y continuar</button>
         </> : <button className="btn ghost" onClick={onClose}>Cerrar</button>}>
         <RoleTip>
           {vista === 'sol'
-            ? <><PenLine size={13} style={{ marginRight: 5 }} />Como SOLICITANTE: revisa la propuesta del agente y decide. Acepta el cambio o escribe tu propia versión para re-validar.</>
+            ? sol.requiereRevisionHumana
+              ? <><Eye size={13} style={{ marginRight: 5 }} />Solo lectura: el equipo CX debe revisar esta comunicación antes de que puedas aplicar cambios.</>
+              : <><PenLine size={13} style={{ marginRight: 5 }} />Como SOLICITANTE: revisa la propuesta del agente y decide. Acepta el cambio o escribe tu propia versión para re-validar.</>
             : <><Eye size={13} style={{ marginRight: 5 }} />Vista CX: monitoreo. La acción de aceptar/editar la realiza el área solicitante.</>}
         </RoleTip>
         <div className="note bad"><b>El agente detectó observaciones en la redacción:</b>
@@ -599,7 +622,7 @@ function StepModal({ sol, step, vista, onClose, actions }) {
         </div>
         <BeforeAfter sol={sol} antes={sol.contenidoOriginal} despues={fb.contenidoCorregido}
           lblAntes="Versión original" lblDespues="Versión corregida por IA" />
-        {own2 && vista === 'sol' && (
+        {own2 && vista === 'sol' && !sol.requiereRevisionHumana && (
           <div style={{ marginTop: 12 }}>
             <label className="fld">Escribe tu propia versión:</label>
             <textarea value={txt2} onChange={ev => setTxt2(ev.target.value)} />
@@ -657,7 +680,7 @@ function StepModal({ sol, step, vista, onClose, actions }) {
                 {!im.ok && (im.sugerencias || []).length > 0 && (
                   <ul className="chk" style={{ fontSize: 11 }}>{im.sugerencias.map((s, i) => <li key={i}>{s}</li>)}</ul>
                 )}
-                {!im.ok && vista === 'sol' && (
+                {!im.ok && vista === 'sol' && !sol.requiereRevisionHumana && (
                   <label className="btn warn" style={{ marginTop: 8, width: '100%', textAlign: 'center', display: 'block' }}>
                     Subir nueva imagen
                     <input type="file" accept="image/*" style={{ display: 'none' }}
@@ -686,14 +709,16 @@ function StepModal({ sol, step, vista, onClose, actions }) {
     const lg = sol.feedbackPaso4 || {}
     return (
       <Modal title="Paso 4 · Validación legal y cumplimiento" chip={chip} onClose={onClose} wide
-        footer={vista === 'sol' ? <>
+        footer={vista === 'sol' && !sol.requiereRevisionHumana ? <>
           <button className="btn ghost" onClick={() => setOwn4(v => !v)}>{own4 ? 'Cancelar' : 'Hacer mi propia versión'}</button>
           {own4 && <button className="btn warn" onClick={() => actions.onRevalidar4(sol.id, txt4)}>Re-validar con Legal</button>}
           <button className="btn primary" onClick={() => actions.onAceptar4(sol.id)}>Aceptar ajuste y continuar</button>
         </> : <button className="btn ghost" onClick={onClose}>Cerrar</button>}>
         <RoleTip>
           {vista === 'sol'
-            ? <><PenLine size={13} style={{ marginRight: 5 }} />Como SOLICITANTE: revisa las observaciones legales. Acepta el ajuste sugerido o escribe tu propia versión para re-validar.</>
+            ? sol.requiereRevisionHumana
+              ? <><Eye size={13} style={{ marginRight: 5 }} />Solo lectura: el equipo CX debe revisar esta comunicación antes de que puedas aplicar cambios.</>
+              : <><PenLine size={13} style={{ marginRight: 5 }} />Como SOLICITANTE: revisa las observaciones legales. Acepta el ajuste sugerido o escribe tu propia versión para re-validar.</>
             : <><Eye size={13} style={{ marginRight: 5 }} />Vista CX: monitoreo. El ajuste por temas legales lo realiza el área solicitante.</>}
         </RoleTip>
         <div className="note bad"><b>Legal y Cumplimiento detectó observaciones:</b>
@@ -702,7 +727,7 @@ function StepModal({ sol, step, vista, onClose, actions }) {
         </div>
         <BeforeAfter sol={sol} antes={sol.contenidoActual} despues={lg.contenidoCorregido}
           lblAntes="Versión actual" lblDespues="Versión ajustada (legal)" />
-        {own4 && vista === 'sol' && (
+        {own4 && vista === 'sol' && !sol.requiereRevisionHumana && (
           <div style={{ marginTop: 12 }}>
             <label className="fld">Escribe tu propia versión:</label>
             <textarea value={txt4} onChange={ev => setTxt4(ev.target.value)} />
@@ -738,37 +763,47 @@ function StepModal({ sol, step, vista, onClose, actions }) {
       </>
     )
     if (vista === 'cx') {
-      if (sol.aprobadoCX) return <Modal title="Paso 5 - Brief + Aprobacion CX" chip={chip} onClose={onClose} footer={<button className="btn ghost" onClick={onClose}>Cerrar</button>}>{brief}<div className="note ok">Solicitud aprobada por CX.</div></Modal>
+      if (sol.aprobadoCX) return <Modal title="Paso 5 - Brief + Aprobación CX" chip={chip} onClose={onClose} footer={<button className="btn ghost" onClick={onClose}>Cerrar</button>}>{brief}<div className="note ok">Solicitud aprobada por CX.</div></Modal>
       if (sol.estados?.paso5 === 'obs' && sol.mensajeRechazo) return (
         <Modal title="Paso 5 - Rechazado por CX" chip={chip} onClose={onClose} footer={<button className="btn ghost" onClick={onClose}>Cerrar</button>}>
           <div className="note bad"><b>Esta solicitud fue rechazada por CX</b><br />{sol.mensajeRechazo}</div>
           {brief}
         </Modal>
       )
+      const msgFinal = rejectTab === 'ia' ? consejo : rejectMsg
       return (
-        <Modal title="Paso 5 - Brief + Aprobacion CX" chip={chip} onClose={onClose}
+        <Modal title="Paso 5 - Brief + Aprobación CX" chip={chip} onClose={onClose}
           footer={rejectMode ? <>
-            <button className="btn ghost" onClick={() => { setRejectMode(false); setConsejo('') }}>Cancelar</button>
-            <button className="btn warn" disabled={!rejectMsg.trim()} onClick={() => { actions.onRechazar(sol.id, rejectMsg); onClose() }}>Confirmar rechazo</button>
+            <button className="btn ghost" onClick={() => { setRejectMode(false); setConsejo(''); setRejectMsg(''); setRejectTab('ia') }}>Cancelar</button>
+            <button style={{ background:'#E63946', color:'#fff', border:'none', borderRadius:8, padding:'7px 16px', fontSize:13, fontWeight:600, cursor:'pointer', opacity: msgFinal.trim() ? 1 : 0.45 }}
+              disabled={!msgFinal.trim()}
+              onClick={() => { actions.onRechazar(sol.id, msgFinal); onClose() }}>Enviar rechazo</button>
           </> : <>
             <button className="btn ghost" onClick={onClose}>Cerrar</button>
-            <button className="btn warn" onClick={() => setRejectMode(true)}>Rechazar con observaciones</button>
-            <button className="btn primary" onClick={() => actions.onAprobar(sol.id)}>Aprobar solicitud</button>
+            <button style={{ background:'#fff', border:'1px solid #E63946', color:'#E63946', borderRadius:8, padding:'7px 16px', fontSize:13, fontWeight:600, cursor:'pointer' }}
+              onClick={() => setRejectMode(true)}>Rechazar y notificar al solicitante</button>
+            <button style={{ background:'#00964B', color:'#fff', border:'none', borderRadius:8, padding:'7px 16px', fontSize:13, fontWeight:600, cursor:'pointer' }}
+              onClick={() => actions.onAprobar(sol.id)}>Aprobar comunicación</button>
           </>}>
-          <RoleTip><Eye size={13} style={{ marginRight: 5 }} />Vista CX: aqui es donde realmente intervienes. Revisa el brief y da el visto bueno final.</RoleTip>
+          <RoleTip><Eye size={13} style={{ marginRight: 5 }} />Vista CX: aquí es donde realmente intervienes. Revisa el brief y da el visto bueno final.</RoleTip>
           {rejectMode ? (
             <div className="rechazo-panel">
-              <div className="note bad" style={{ marginBottom: 10 }}><b>Redacta el motivo del rechazo</b> - el solicitante lo vera en su bandeja.</div>
-              <textarea value={rejectMsg} onChange={e => setRejectMsg(e.target.value)}
-                placeholder="Describe por que se rechaza esta solicitud y que debe corregirse..." style={{ minHeight: 80 }} />
-              {!consejo && <button className="btn ghost" style={{ marginTop: 8, fontSize: 12 }} onClick={handleGenerarConsejo} disabled={loadingConsejo}>
-                {loadingConsejo ? 'Generando...' : 'Generar sugerencia con IA'}
-              </button>}
-              {consejo && <div className="consejo-box">
-                <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--gray-d)', marginBottom: 4 }}>SUGERENCIA IA:</div>
-                <div style={{ fontSize: 13, lineHeight: 1.55 }}>{consejo}</div>
-                <button className="btn ghost" style={{ marginTop: 8, fontSize: 12 }} onClick={() => setRejectMsg(consejo)}>Usar esta sugerencia</button>
-              </div>}
+              <div style={{ fontSize:13, fontWeight:700, color:'var(--ink)', marginBottom:10 }}>Mensaje para el solicitante</div>
+              <div className="rechazo-tabs">
+                <button className={'rtab' + (rejectTab === 'ia' ? ' active' : '')} onClick={() => setRejectTab('ia')}>Generar con IA</button>
+                <button className={'rtab' + (rejectTab === 'propio' ? ' active' : '')} onClick={() => setRejectTab('propio')}>Escribir propio</button>
+              </div>
+              {rejectTab === 'ia' ? (
+                <div>
+                  <button className="btn primary" style={{ fontSize:12, marginBottom:8 }} onClick={handleGenerarConsejo} disabled={loadingConsejo}>
+                    {loadingConsejo ? 'Generando...' : 'Generar consejo'}
+                  </button>
+                  {consejo && <textarea value={consejo} onChange={e => setConsejo(e.target.value)} style={{ height:120 }} />}
+                </div>
+              ) : (
+                <textarea value={rejectMsg} onChange={e => setRejectMsg(e.target.value)}
+                  placeholder="Escribe aquí el motivo del rechazo y las sugerencias para el solicitante..." style={{ height:120 }} />
+              )}
             </div>
           ) : brief}
         </Modal>
@@ -1275,92 +1310,68 @@ function BeforeAfter({ sol, antes, despues, lblAntes = 'Versión actual', lblDes
 function NuevaModal({ onClose, onCrear, onImportar }) {
   const AREA = 'Productos'
   const NOMBRE = 'Solicitante'
-  const [modo, setModo] = useState('escribir')
   const [tipo, setTipo] = useState('SMS')
+  const [tipoCustom, setTipoCustom] = useState('')
   const [titulo, setTitulo] = useState('')
   const [contenido, setContenido] = useState('')
   const [asesorNombre, setAsesorNombre] = useState('')
-  const [asesorTelefono, setAsesorTelefono] = useState('')
   const [adjuntos, setAdjuntos] = useState([])
 
   function submit() {
-    if (modo === 'msg') {
-      const msgFile = adjuntos.find(f => f.name.toLowerCase().endsWith('.msg'))
-      if (!msgFile) { alert('Selecciona un archivo .msg de Outlook.'); return }
-      onImportar(msgFile, AREA)
-      return
-    }
-    if (!contenido.trim()) { alert('Escribe el contenido de la comunicacion.'); return }
+    const msgFile = adjuntos.find(f => f.name.toLowerCase().endsWith('.msg'))
+    if (msgFile) { onImportar(msgFile, AREA); return }
+    if (!contenido.trim()) { alert('Escribe el contenido de la comunicación.'); return }
+    if (tipo === 'Otro' && !tipoCustom.trim()) { alert('Especifica el tipo de pieza.'); return }
+    const tipoFinal = tipo === 'Otro' ? tipoCustom.trim() : tipo
     const fd = new FormData()
-    fd.append('titulo', titulo || `Comunicacion ${tipo}`)
+    fd.append('titulo', titulo || `Comunicación ${tipoFinal}`)
     fd.append('remitente', NOMBRE)
     fd.append('area', AREA)
-    fd.append('tipo', tipo)
+    fd.append('tipo', tipoFinal)
     fd.append('contenido', contenido)
     fd.append('asesorNombre', asesorNombre)
-    fd.append('asesorTelefono', asesorTelefono)
     adjuntos.filter(f => f.type.startsWith('image/')).forEach(f => fd.append('imagenes', f))
     onCrear(fd)
   }
 
   const adjNombres = adjuntos.map(f => f.name).join(', ')
+  const hasMsgFile = adjuntos.some(f => f.name.toLowerCase().endsWith('.msg'))
 
   return (
-    <Modal title="Nueva solicitud de comunicacion" onClose={onClose}
+    <Modal title="Nueva solicitud de comunicación" onClose={onClose}
       footer={<>
         <button className="btn ghost" onClick={onClose}>Cancelar</button>
-        <button className="btn primary" onClick={submit}>{modo === 'msg' ? 'Importar y validar con IA' : 'Enviar y validar con IA'}</button>
+        <button className="btn primary" onClick={submit}>{hasMsgFile ? 'Importar y validar con IA' : 'Enviar y validar con IA'}</button>
       </>}>
 
       <div className="identity-strip">
-        Solicitando como: <b>{NOMBRE}</b> - Area <b>{AREA}</b>
+        Solicitando como: <b>{NOMBRE}</b> - Área <b>{AREA}</b>
       </div>
 
-      <div className="segmented">
-        <button className={modo === 'escribir' ? 'active' : ''} onClick={() => setModo('escribir')}>
-          <PenLine size={14} style={{ marginRight: 5 }} />Escribir mensaje
-        </button>
-        <button className={modo === 'msg' ? 'active' : ''} onClick={() => setModo('msg')}>
-          <Mail size={14} style={{ marginRight: 5 }} />Adjuntar correo (.msg)
-        </button>
-      </div>
-
-      {modo === 'escribir' ? (
+      <label className="fld">Tipo de pieza</label>
+      <select value={tipo} onChange={e => setTipo(e.target.value)}>{TIPOS.map(t => <option key={t}>{t}</option>)}</select>
+      {tipo === 'Otro' && (
         <>
-          <label className="fld">Tipo de pieza</label>
-          <select value={tipo} onChange={e => setTipo(e.target.value)}>{TIPOS.map(t => <option key={t}>{t}</option>)}</select>
-          <label className="fld">Titulo</label>
-          <input type="text" value={titulo} onChange={e => setTitulo(e.target.value)} placeholder={`Comunicacion ${tipo}`} />
-          <label className="fld">Contenido del mensaje</label>
-          <textarea value={contenido} onChange={e => setContenido(e.target.value)} placeholder="Escribe el mensaje a validar..." style={{ minHeight: 110 }} />
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-            <div><label className="fld">Asesor (nombre)</label><input type="text" value={asesorNombre} onChange={e => setAsesorNombre(e.target.value)} placeholder="Luis Perez" /></div>
-            <div><label className="fld">Asesor (telefono)</label><input type="text" value={asesorTelefono} onChange={e => setAsesorTelefono(e.target.value)} placeholder="987 654 321" /></div>
-          </div>
-          <label className="fld">Archivos adjuntos <span style={{ fontWeight: 600, color: 'var(--gray-d)' }}>(imagenes para validacion de marca)</span></label>
-          <label className="adj-drop">
-            <input type="file" accept=".msg,.pdf,.docx,.png,.jpg,.jpeg,.gif,image/*" multiple style={{ display: 'none' }}
-              onChange={e => setAdjuntos(Array.from(e.target.files))} />
-            <div className="adj-file-row">
-              <Upload size={14} />
-              <span>{adjuntos.length > 0 ? adjNombres : 'Seleccionar archivos (.msg, PDF, DOCX, imagenes)'}</span>
-            </div>
-          </label>
-        </>
-      ) : (
-        <>
-          <label className="fld">Archivos adjuntos <span style={{ fontWeight: 600, color: 'var(--gray-d)' }}>(correo .msg de Outlook)</span></label>
-          <label className="adj-drop">
-            <input type="file" accept=".msg" style={{ display: 'none' }}
-              onChange={e => setAdjuntos(e.target.files[0] ? [e.target.files[0]] : [])} />
-            <div className="adj-file-row">
-              <Mail size={14} />
-              <span>{adjuntos.length > 0 ? adjuntos[0].name : 'Seleccionar archivo .msg de Outlook'}</span>
-            </div>
-          </label>
-          {adjuntos.length > 0 && <div style={{ fontSize: 11, color: 'var(--gray-d)', marginTop: 4 }}>Se extraera asunto, remitente, cuerpo e imagenes del correo.</div>}
+          <label className="fld">Especifica el tipo de pieza</label>
+          <input type="text" value={tipoCustom} onChange={e => setTipoCustom(e.target.value)} placeholder="Describe el tipo de comunicación..." />
         </>
       )}
+      <label className="fld">Titulo</label>
+      <input type="text" value={titulo} onChange={e => setTitulo(e.target.value)} placeholder={`Comunicación ${tipo === 'Otro' ? (tipoCustom || 'personalizado') : tipo}`} />
+      <label className="fld">Contenido del mensaje</label>
+      <textarea value={contenido} onChange={e => setContenido(e.target.value)} placeholder="Escribe el mensaje a validar..." style={{ minHeight: 110 }} />
+      <label className="fld">Asesor (nombre)</label>
+      <input type="text" value={asesorNombre} onChange={e => setAsesorNombre(e.target.value)} placeholder="Luis Perez" />
+      <label className="fld">Archivos adjuntos <span style={{ fontWeight: 600, color: 'var(--gray-d)' }}>(imágenes para validación de marca)</span></label>
+      <label className="adj-drop">
+        <input type="file" accept=".msg,.pdf,.docx,.png,.jpg,.jpeg,.gif,image/*" multiple style={{ display: 'none' }}
+          onChange={e => setAdjuntos(Array.from(e.target.files))} />
+        <div className="adj-file-row">
+          <Upload size={14} />
+          <span>{adjuntos.length > 0 ? adjNombres : 'Seleccionar archivos (.msg, PDF, DOCX, imágenes)'}</span>
+        </div>
+      </label>
+      {hasMsgFile && <div style={{ fontSize: 11, color: 'var(--gray-d)', marginTop: 4 }}>Se extraerá asunto, remitente, cuerpo e imágenes del correo .msg.</div>}
     </Modal>
   )
 }
@@ -1425,9 +1436,9 @@ function Donut({ segments, size = 176, stroke = 28, centerTop, centerBottom }) {
             const len = (s.value / total) * c
             const off = -acc
             acc += len
-            return <circle key={i} cx={size / 2} cy={size / 2} r={r} fill="none" stroke={s.color}
+            return <circle key={i} cx={size / 2} cy={size / 2} r={r} fill="none"
               strokeWidth={stroke} strokeDasharray={`${len} ${c - len}`} strokeDashoffset={off}
-              className="donut-seg" style={{ ['--di']: i }} />
+              className="donut-seg" style={{ stroke: s.color, '--di': i }} />
           })}
         </g>
       </svg>
@@ -1489,7 +1500,7 @@ function Dashboard({ lista, cfg, onRefresh, onVerCX }) {
     .sort((a, b) => parseTs(a.fechaCreacion) - parseTs(b.fechaCreacion))
 
   if (total === 0) return (
-    <div className="empty"><FileSearch size={46} style={{ opacity: .4 }} /><span>Aun no hay solicitudes para graficar. Crea una desde la Vista Solicitante.</span></div>
+    <div className="empty"><FileSearch size={46} style={{ opacity: .4 }} /><span>Aún no hay solicitudes para graficar. Crea una desde la Vista Solicitante.</span></div>
   )
 
   return (
@@ -1497,11 +1508,11 @@ function Dashboard({ lista, cfg, onRefresh, onVerCX }) {
       <div className="dash-head">
         <div>
           <h2>Dashboard de avance</h2>
-          <p>Metricas en vivo del flujo de validacion - {total} solicitud{total === 1 ? '' : 'es'} de todas las areas</p>
+          <p>Métricas en vivo del flujo de validación - {total} solicitud{total === 1 ? '' : 'es'} de todas las áreas</p>
         </div>
         <div className="dash-head-right">
           {cfg && <span className="envtag dark"><span className="live"></span>{cfg.modelo?.model}</span>}
-          <button className="btn ghost dash-refresh" onClick={onRefresh} title="Actualizar metricas">Actualizar</button>
+          <button className="btn ghost dash-refresh" onClick={onRefresh} title="Actualizar métricas">Actualizar</button>
         </div>
       </div>
 
@@ -1545,18 +1556,18 @@ function Dashboard({ lista, cfg, onRefresh, onVerCX }) {
         </div>
         <div className="dk">
           <div className="dk-ic" style={{ background: '#FEE8E8', color: '#E63946' }}><AlertTriangle size={22} /></div>
-          <div className="dk-body"><div className="dk-big">{pendientes}</div><div className="dk-lbl">Requieren accion</div><div className="dk-sub">{macro.obs} observadas - {macro.wait} esperando CX</div></div>
+          <div className="dk-body"><div className="dk-big">{pendientes}</div><div className="dk-lbl">Requieren acción</div><div className="dk-sub">{macro.obs} observadas - {macro.wait} esperando CX</div></div>
         </div>
         <div className="dk">
           <div className="dk-ic" style={{ background: '#EAF0FB', color: '#2563EB' }}><UserCheck size={22} /></div>
-          <div className="dk-body"><div className="dk-big">{revHumana}</div><div className="dk-lbl">Revision humana</div><div className="dk-sub">clasificadas como riesgo</div></div>
+          <div className="dk-body"><div className="dk-big">{revHumana}</div><div className="dk-lbl">Revisión humana</div><div className="dk-sub">clasificadas como riesgo</div></div>
         </div>
       </div>
 
       {/* Fila 3: Dona + Avance por etapa */}
       <div className="dash-grid">
         <div className="panel">
-          <div className="panel-h"><h3>Estado del pipeline</h3><span className="panel-s">distribucion de solicitudes</span></div>
+          <div className="panel-h"><h3>Estado del pipeline</h3><span className="panel-s">distribución de solicitudes</span></div>
           <div className="donut-row">
             <Donut segments={segEstado} centerTop={total} centerBottom="solicitudes" />
             <div className="donut-legend">
@@ -1592,14 +1603,38 @@ function Dashboard({ lista, cfg, onRefresh, onVerCX }) {
         </div>
       </div>
 
-      {/* Fila 4: Tabla de atencion ordenada por antiguedad */}
+      {/* Fila 4: Por área solicitante */}
+      {areas.length > 0 && (
+        <div className="panel">
+          <div className="panel-h"><h3>Por área solicitante</h3><span className="panel-s">distribución por estado</span></div>
+          <div className="cbars">
+            {areas.map(a => (
+              <div key={a.k} className="cbar-row">
+                <div className="cbar-name">{a.k}</div>
+                <CompBar segments={areaSegs(a.k)} total={a.v} max={maxArea} />
+                <div className="cbar-val">{a.v}</div>
+              </div>
+            ))}
+          </div>
+          <div className="cbar-legend">
+            {ESTADO_META.filter(m => areas.some(a => areaSegs(a.k).find(s => s.lbl === m.lbl && s.value > 0))).map(m => (
+              <div key={m.k} className="leg-item">
+                <span className="leg-dot" style={{ background: m.color }} />
+                <span className="leg-lbl">{m.lbl}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Fila 5: Tabla de atencion ordenada por antiguedad */}
       <div className="panel attn">
         <div className="panel-h">
-          <h3>Requieren atencion</h3>
+          <h3>Requieren atención</h3>
           <span className="panel-s">{atencion.length} solicitud{atencion.length === 1 ? '' : 'es'} - ordenadas por tiempo de espera</span>
         </div>
         {atencion.length === 0 ? (
-          <div className="attn-empty">Todo al dia: ninguna solicitud pendiente de accion.</div>
+          <div className="attn-empty">Todo al día: ninguna solicitud pendiente de acción.</div>
         ) : (
           <div className="attn-list">
             {atencion.map(r => {
@@ -1612,7 +1647,7 @@ function Dashboard({ lista, cfg, onRefresh, onVerCX }) {
                   <span className="attn-dot" style={{ background: meta?.color }} />
                   <div className="attn-meta">
                     <div className="attn-ttl">{r.titulo}</div>
-                    <div className="attn-sub">{r.id} - {r.area} - {r.tipo}{r.requiereRevisionHumana ? ' - revision humana' : ''}{espera ? ` - ${espera.txt}` : ''}</div>
+                    <div className="attn-sub">{r.id} - {r.area} - {r.tipo}{r.requiereRevisionHumana ? ' - revisión humana' : ''}{espera ? ` - ${espera.txt}` : ''}</div>
                   </div>
                   <div className="attn-prog"><div className="attn-prog-track"><div className="attn-prog-fill" style={{ width: (done / 5 * 100) + '%' }} /></div><span>{done}/5</span></div>
                   <span className="attn-badge" style={{ background: meta?.color }}>{meta?.lbl}</span>
