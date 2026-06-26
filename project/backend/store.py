@@ -10,7 +10,7 @@ vive en GCS (o ./uploads en local).
 """
 import json as _json
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 
 # Artefactos de un correo .msg real (SHIRLEY) para el seed: HTML sanitizado + modelo de preview.
 # Permiten demostrar el preview del correo y el antes/después sin importar en vivo.
@@ -106,190 +106,395 @@ def _base(**kw):
 
 
 def seed():
-    """8 solicitudes representativas de comunicaciones reales de Mibanco para demo.
+    """12 solicitudes representativas de comunicaciones reales de Mibanco para demo.
 
-    Feedback pre-calculado: no llaman a la IA en el arranque. Las solicitudes NUEVAS
-    que se creen desde la UI sí ejecutan los agentes Gemini en vivo.
+    Fechas calculadas dinámicamente (relativas al arranque) para que el seed
+    siempre sea fresco. No llaman a la IA al inicio.
 
-    Dashboard resultante: 8 total | 3 publicadas | 3 con obs | 1 esperando CX | 1 en proceso
+    Dashboard: 12 total | 4 publicadas | 5 obs | 1 esperando CX | 2 en proceso
+    Revisiones humanas activas: 3 (SOL-003 oferta, SOL-008 reclamo, SOL-011 crisis)
     """
     STORE.clear()
     _counter["n"] = 0
 
-    # SOL-001 — SMS aprobado y publicado
+    def _fecha(dias):
+        return (datetime.now() - timedelta(days=dias)).strftime("%d/%m/%Y")
+
+    def _ts(dias, hora="09:00"):
+        return (datetime.now() - timedelta(days=dias)).strftime(f"%d/%m/%Y {hora}")
+
+    # SOL-001 — SMS aprobado y publicado (hace 20 días)
     s1 = _base(
         id=nuevo_id(), titulo="Recordatorio de pago de cuota",
-        remitente="María Quispe", fecha="10/06/2026", fechaCreacion="10/06/2026 08:15",
+        remitente="Maria Quispe", fecha=_fecha(20), fechaCreacion=_ts(20, "08:15"),
         area="Productos", tipo="SMS",
-        contenido="Hola {Nombre}, recuerda pagar tu cuota antes del {fecha}. Evita recargos. Paga fácil en la app Mibanco. Tu asesor: {Asesor}.",
-        asesor={"nombre": "Carlos Ruiz", "telefono": "987 654 321"},
+        contenido="Hola {Nombre}, recuerda pagar tu cuota antes del {fecha}. Evita recargos. Paga facil en la app Mibanco. Tu asesor: {Asesor}.",
+        asesor={"nombre": "Luis Perez", "telefono": ""},
         estados=_estados(p1="ok", p2="ok", p3="ok", p4="ok", p5="ok"),
-        aprobadoCX=True, publicado=True,
         feedbackPaso2={"fallos": [], "principios": [], "contenidoCorregido": ""},
-        brief="Pieza: SMS — Recordatorio de pago (Área Productos). Redacción: OK (breve, personalizado, CTA directo). Legal: OK. Recomendación: aprobado para envío.",
+        feedbackPaso4={"ok": True, "observaciones": [], "sugerencias": [], "contenidoCorregido": ""},
+        aprobadoCX=True, publicado=True,
         historial=[
-            {"ts": "10/06/2026 08:15", "actor": "sistema", "accion": "Solicitud recibida (Paso 1)"},
-            {"ts": "10/06/2026 08:17", "actor": "Agente IA Redacción", "accion": "Redacción aprobada sin observaciones"},
-            {"ts": "10/06/2026 08:19", "actor": "Agente IA Marca", "accion": "Sin imágenes — validación de marca no aplica"},
-            {"ts": "10/06/2026 08:21", "actor": "Agente IA Legal", "accion": "Validación legal: sin riesgos detectados"},
-            {"ts": "10/06/2026 08:23", "actor": "sistema", "accion": "Aprobación automática por IA — todos los agentes aprobaron sin observaciones"},
-            {"ts": "10/06/2026 09:05", "actor": "CX", "accion": "Solicitud aprobada y publicada"},
+            {"ts": _ts(20, "08:15"), "actor": "sistema", "accion": "Solicitud recibida (Paso 1)"},
+            {"ts": _ts(20, "08:17"), "actor": "Agente IA", "accion": "Redaccion aprobada sin observaciones (Paso 2)"},
+            {"ts": _ts(20, "08:18"), "actor": "Agente IA", "accion": "Sin imagenes adjuntas, paso aprobado (Paso 3)"},
+            {"ts": _ts(20, "08:20"), "actor": "Agente IA", "accion": "Sin riesgos legales detectados (Paso 4)"},
+            {"ts": _ts(20, "08:22"), "actor": "sistema", "accion": "Aprobacion automatica por IA - todos los agentes aprobaron sin observaciones (Paso 5)"},
+            {"ts": _ts(20, "09:05"), "actor": "sistema", "accion": "Comunicacion publicada"},
         ],
     )
 
-    # SOL-002 — Email con observaciones en redacción
+    # SOL-002 — Email con observaciones en redacción (hace 12 días)
     s2 = _base(
-        id=nuevo_id(), titulo="Bienvenida a crédito aprobado",
-        remitente="Jorge Ramos", fecha="15/06/2026", fechaCreacion="15/06/2026 10:30",
+        id=nuevo_id(), titulo="Bienvenida a credito aprobado",
+        remitente="Jorge Ramos", fecha=_fecha(12), fechaCreacion=_ts(12, "10:30"),
         area="Digital", tipo="Email",
         contenido=(
-            "Estimado cliente, nos complace informarle que su solicitud de crédito ha sido "
-            "procesada satisfactoriamente por nuestro sistema de evaluación crediticia y ha "
-            "resultado en una aprobación favorable de su línea de financiamiento."
+            "Estimado cliente, nos complace informarle que su solicitud de credito ha sido "
+            "procesada satisfactoriamente por nuestro sistema de evaluacion crediticia y ha "
+            "resultado en una aprobacion favorable de su linea de financiamiento. Para proceder "
+            "con el desembolso debera acercarse a la oficina mas proxima portando su "
+            "documentacion en regla."
         ),
-        asesor={"nombre": "Rosa Medina", "telefono": "999 111 222"},
+        asesor={"nombre": "Carmen Villanueva", "telefono": ""},
         estados=_estados(p1="ok", p2="obs"),
         feedbackPaso2={
             "fallos": [
-                "Lenguaje muy formal y poco cercano",
-                "Sin saludo personalizado",
-                "Sin CTA claro",
-                "No menciona al asesor de negocios",
+                "Lenguaje muy formal y poco cercano para el publico microempresario",
+                "Sin saludo personalizado con nombre del cliente",
+                "Sin CTA claro - no indica que debe hacer exactamente",
+                "No menciona al asesor de negocios ni su contacto",
+                "Mensaje demasiado largo para un email de bienvenida",
             ],
-            "principios": ["Lenguaje simple y cercano", "Saludo personalizado", "CTA claro", "Datos del Asesor de Negocios"],
+            "principios": [
+                "Lenguaje simple y cercano",
+                "Facil de actuar - CTA claro",
+                "Personalizado con datos del asesor",
+            ],
             "contenidoCorregido": (
-                "Hola {Nombre}, tu crédito fue aprobado. Acércate a tu agencia o llama a tu "
-                "asesor {Asesor} al {telefono} para coordinar el desembolso. Te esperamos."
+                "Hola {Nombre}, tu credito fue aprobado. Acercate a tu agencia Mibanco mas "
+                "cercana o llama a tu asesor {Asesor} para coordinar el desembolso. "
+                "Te esperamos con gusto."
             ),
         },
+        historial=[
+            {"ts": _ts(12, "10:30"), "actor": "sistema", "accion": "Solicitud recibida (Paso 1)"},
+            {"ts": _ts(12, "10:33"), "actor": "Agente IA", "accion": "Observaciones detectadas en redaccion (Paso 2)"},
+        ],
     )
 
-    # SOL-003 — Push notification esperando aprobación CX (oferta comercial)
+    # SOL-003 — Push notification esperando CX (oferta comercial, hace 9 días)
     s3 = _base(
         id=nuevo_id(), titulo="Promo seguro para tu negocio",
-        remitente="Carla Díaz", fecha="17/06/2026", fechaCreacion="17/06/2026 14:00",
+        remitente="Carla Diaz", fecha=_fecha(9), fechaCreacion=_ts(9, "14:00"),
         area="Productos", tipo="Push notification",
-        contenido="Activa el Seguro Mibanco y cuida lo que más te importa. Desde S/5 al mes. Activa en la app.",
-        asesor={"nombre": "Luis Pérez", "telefono": "987 654 321"},
+        contenido="Activa el Seguro Mibanco y cuida lo que mas te importa. Desde S/5 al mes. Activa ahora en la app.",
+        asesor={"nombre": "Roberto Huanca", "telefono": ""},
         estados=_estados(p1="ok", p2="ok", p3="ok", p4="ok", p5="wait"),
+        feedbackPaso2={"fallos": [], "principios": [], "contenidoCorregido": ""},
+        feedbackPaso4={"ok": True, "observaciones": [], "sugerencias": [], "contenidoCorregido": ""},
         requiereRevisionHumana=True, tipoRiesgo="oferta comercial",
         brief=(
-            "Pieza: Push notification — Promo seguro (Área Productos). Redacción: OK (conciso, CTA directo). "
-            "Marca: OK. Legal: sin observaciones críticas. Contiene oferta comercial — requiere revisión "
-            "obligatoria del equipo CX antes de la aprobación final."
+            "Pieza tipo Push notification del area Productos. Canal: app movil Mibanco. "
+            "Mensaje promocional de seguro para negocios. Redaccion aprobada - lenguaje claro "
+            "y CTA directo. Marca aprobada. Legal aprobado. Requiere aprobacion CX por ser "
+            "oferta comercial de producto financiero segun politica interna."
         ),
+        historial=[
+            {"ts": _ts(9, "14:00"), "actor": "sistema", "accion": "Solicitud recibida (Paso 1)"},
+            {"ts": _ts(9, "14:02"), "actor": "Agente IA", "accion": "Redaccion aprobada (Paso 2)"},
+            {"ts": _ts(9, "14:03"), "actor": "Agente IA", "accion": "Sin imagenes, paso aprobado (Paso 3)"},
+            {"ts": _ts(9, "14:05"), "actor": "Agente IA", "accion": "Sin riesgos legales (Paso 4)"},
+            {"ts": _ts(9, "14:07"), "actor": "sistema", "accion": "Brief generado. Pendiente aprobacion CX por oferta comercial (Paso 5)"},
+        ],
     )
 
-    # SOL-004 — WhatsApp aprobado y publicado
+    # SOL-004 — WhatsApp aprobado y publicado (hace 18 días)
     s4 = _base(
         id=nuevo_id(), titulo="Recordatorio vencimiento cuota WhatsApp",
-        remitente="Ana Torres", fecha="13/06/2026", fechaCreacion="13/06/2026 09:00",
+        remitente="Ana Torres", fecha=_fecha(18), fechaCreacion=_ts(18, "09:00"),
         area="Negocios", tipo="WhatsApp",
-        contenido="Hola {Nombre}, te recordamos que tu cuota vence el {fecha}. Paga en la app Mibanco. Tu asesor: {Asesor}.",
-        asesor={"nombre": "Carlos Ruiz", "telefono": "955 333 444"},
-        estados=_estados(p1="ok", p2="ok", p3="ok", p4="ok", p5="ok"),
-        aprobadoCX=True, publicado=True,
-        brief=(
-            "Pieza: WhatsApp — Recordatorio de cuota (Área Negocios). Redacción: OK (breve, "
-            "personalizado, CTA claro). Legal: OK. Recomendación: aprobado para envío."
+        contenido=(
+            "Hola {Nombre}, te recordamos que tu cuota vence el {fecha}. Paga rapido en la "
+            "app Mibanco y evita recargos. Cualquier consulta escribe a tu asesora {Asesor}."
         ),
+        asesor={"nombre": "Milagros Quispe", "telefono": ""},
+        estados=_estados(p1="ok", p2="ok", p3="ok", p4="ok", p5="ok"),
+        feedbackPaso2={"fallos": [], "principios": [], "contenidoCorregido": ""},
+        feedbackPaso4={"ok": True, "observaciones": [], "sugerencias": [], "contenidoCorregido": ""},
+        aprobadoCX=True, publicado=True,
+        historial=[
+            {"ts": _ts(18, "09:00"), "actor": "sistema", "accion": "Solicitud recibida (Paso 1)"},
+            {"ts": _ts(18, "09:02"), "actor": "Agente IA", "accion": "Redaccion aprobada (Paso 2)"},
+            {"ts": _ts(18, "09:03"), "actor": "Agente IA", "accion": "Sin imagenes, paso aprobado (Paso 3)"},
+            {"ts": _ts(18, "09:05"), "actor": "Agente IA", "accion": "Sin riesgos legales (Paso 4)"},
+            {"ts": _ts(18, "09:07"), "actor": "sistema", "accion": "Aprobacion automatica por IA (Paso 5)"},
+            {"ts": _ts(18, "09:45"), "actor": "sistema", "accion": "Comunicacion publicada"},
+        ],
     )
 
-    # SOL-005 — Email con obs en redacción y legal, revisión humana obligatoria
+    # SOL-005 — Email con observaciones legales + revisión humana (hace 7 días)
     s5 = _base(
-        id=nuevo_id(), titulo="Oferta de ampliación de línea de crédito",
-        remitente="Pedro Soto", fecha="19/06/2026", fechaCreacion="19/06/2026 11:00",
+        id=nuevo_id(), titulo="Oferta ampliacion linea de credito",
+        remitente="Pedro Soto", fecha=_fecha(7), fechaCreacion=_ts(7, "11:00"),
         area="Productos", tipo="Email",
         contenido=(
-            "Le informamos que puede acceder a una ampliación de hasta S/50,000 en su línea de "
-            "crédito con una tasa preferencial garantizada del 0% los primeros 3 meses."
+            "Hola {Nombre}, tenemos una oferta exclusiva para ti. Amplia tu linea de credito "
+            "hasta S/50,000 con una tasa preferencial garantizada del 0% los primeros 3 meses "
+            "sin ningun costo adicional. Oferta valida solo hasta el viernes. "
+            "Llama ya a tu asesor {Asesor}."
         ),
-        asesor={"nombre": "Luis Pérez", "telefono": "987 654 321"},
-        estados=_estados(p1="ok", p2="obs", p3="ok", p4="obs"),
-        feedbackPaso2={
-            "fallos": ["Promesa de tasa 0% requiere verificación legal antes de su comunicación al cliente"],
-            "principios": ["Precisión y veracidad en ofertas comerciales"],
-            "contenidoCorregido": "",
-        },
+        asesor={"nombre": "Julio Mamani", "telefono": ""},
+        estados=_estados(p1="ok", p2="ok", p3="ok", p4="obs"),
+        feedbackPaso2={"fallos": [], "principios": [], "contenidoCorregido": ""},
         feedbackPaso4={
             "ok": False,
             "observaciones": [
-                "Promesa de tasa garantizada sin respaldo documental adjunto",
-                "Posible incumplimiento Res. SBS 3274-2017 — publicidad engañosa",
+                "Promesa de tasa 0% garantizada sin respaldo documental verificable",
+                "Posible incumplimiento Res. SBS 3274-2017 sobre publicidad financiera enganosa",
+                "Urgencia artificial - oferta valida solo hasta el viernes - practica cuestionable segun INDECOPI",
+                "Monto especifico S/50,000 sin mencionar condiciones ni requisitos",
             ],
             "sugerencias": [
-                "Adjuntar condiciones legales de la oferta antes de comunicar.",
-                "Reemplazar 'garantizada del 0%' por 'sujeta a evaluación crediticia'.",
+                "Retirar la promesa de tasa 0% o agregar asterisco con condiciones completas",
+                "Eliminar el plazo de urgencia artificial",
+                "Agregar referencia a terminos y condiciones aplicables",
+                "Mencionar que la ampliacion esta sujeta a evaluacion",
             ],
             "contenidoCorregido": "",
         },
-        requiereRevisionHumana=True,
-        tipoRiesgo="oferta comercial",
+        requiereRevisionHumana=True, tipoRiesgo="oferta comercial",
+        historial=[
+            {"ts": _ts(7, "11:00"), "actor": "sistema", "accion": "Solicitud recibida (Paso 1)"},
+            {"ts": _ts(7, "11:02"), "actor": "Agente IA", "accion": "Redaccion aprobada (Paso 2)"},
+            {"ts": _ts(7, "11:03"), "actor": "Agente IA", "accion": "Sin imagenes, paso aprobado (Paso 3)"},
+            {"ts": _ts(7, "11:05"), "actor": "Agente IA", "accion": "Observaciones legales detectadas (Paso 4)"},
+        ],
     )
 
-    # SOL-006 — SMS en proceso (agente de redacción activo)
+    # SOL-006 — SMS en proceso, agente redacción activo (hace 2 días)
     s6 = _base(
-        id=nuevo_id(), titulo="Campaña cobranza cuota vencida",
-        remitente="Luis Mendoza", fecha="22/06/2026", fechaCreacion="22/06/2026 15:30",
+        id=nuevo_id(), titulo="Campana cobranza cuota vencida",
+        remitente="Luis Mendoza", fecha=_fecha(2), fechaCreacion=_ts(2, "15:30"),
         area="Negocios", tipo="SMS",
         contenido=(
-            "MIBANCO: Su cuota de S/320 venció el 01/06. Regularice su pago para evitar "
+            "MIBANCO: Su cuota de S/320 vencio el 01/06. Regularice su pago para evitar "
             "reportes a centrales de riesgo. Llame al 0800-00-900."
         ),
-        asesor={"nombre": "Rosa Medina", "telefono": "999 111 222"},
+        asesor={"nombre": "Sandra Ccopa", "telefono": ""},
         estados=_estados(p1="ok", p2="proc"),
+        historial=[
+            {"ts": _ts(2, "15:30"), "actor": "sistema", "accion": "Solicitud recibida (Paso 1)"},
+            {"ts": _ts(2, "15:32"), "actor": "Agente IA", "accion": "Validando redaccion... (Paso 2)"},
+        ],
     )
 
-    # SOL-007 — Email aprobado y publicado
+    # SOL-007 — Email aprobado y publicado (hace 25 días)
     s7 = _base(
-        id=nuevo_id(), titulo="Ingresa a la App Mibanco con tu tarjeta de débito",
-        remitente="MiBanco Digital", fecha="05/06/2026", fechaCreacion="05/06/2026 10:00",
+        id=nuevo_id(), titulo="Ingresa a la App Mibanco con tu tarjeta de debito",
+        remitente="MiBanco Digital", fecha=_fecha(25), fechaCreacion=_ts(25, "10:00"),
         area="Productos", tipo="Email",
         contenido=(
-            "Hola {Nombre}, ahora puedes registrarte en la App Mibanco solo con tu tarjeta de débito. "
-            "Acércate a tu agencia más cercana y solicita tu acceso. Con la app puedes transferir gratis, "
-            "pagar tus préstamos sin comisiones y desembolsar tu línea de crédito en minutos. "
-            "Tu asesor {Asesor} te acompaña en cada paso."
+            "Hola {Nombre}, ahora puedes registrarte en la App Mibanco solo con tu tarjeta de "
+            "debito. Acercate a tu agencia mas cercana y solicita tu acceso. Con la app puedes "
+            "transferir gratis todos los dias, pagar tus prestamos sin comisiones y desembolsar "
+            "tu linea de credito en minutos. Tu asesor {Asesor} te acompana en cada paso."
         ),
-        asesor={"nombre": "Carlos Ruiz", "telefono": "987 654 321"},
+        asesor={"nombre": "Guia Digital", "telefono": ""},
         estados=_estados(p1="ok", p2="ok", p3="ok", p4="ok", p5="ok"),
+        feedbackPaso2={"fallos": [], "principios": [], "contenidoCorregido": ""},
+        feedbackPaso4={"ok": True, "observaciones": [], "sugerencias": [], "contenidoCorregido": ""},
         aprobadoCX=True, publicado=True,
-        brief=(
-            "Pieza: Email — App Mibanco con tarjeta de débito (Área Productos). Redacción: OK "
-            "(tono cercano, personalizado, múltiples beneficios con CTA claro). Marca: OK. "
-            "Legal: OK. Recomendación: aprobado para envío."
-        ),
+        historial=[
+            {"ts": _ts(25, "10:00"), "actor": "sistema", "accion": "Solicitud recibida (Paso 1)"},
+            {"ts": _ts(25, "10:02"), "actor": "Agente IA", "accion": "Redaccion aprobada (Paso 2)"},
+            {"ts": _ts(25, "10:03"), "actor": "Agente IA", "accion": "Sin imagenes, paso aprobado (Paso 3)"},
+            {"ts": _ts(25, "10:05"), "actor": "Agente IA", "accion": "Sin riesgos legales (Paso 4)"},
+            {"ts": _ts(25, "10:07"), "actor": "sistema", "accion": "Aprobacion automatica por IA (Paso 5)"},
+            {"ts": _ts(25, "10:30"), "actor": "sistema", "accion": "Comunicacion publicada"},
+        ],
     )
 
-    # SOL-008 — Email revisión humana por reclamo de cliente
+    # SOL-008 — Email revisión humana por reclamo (hace 1 día)
     s8 = _base(
-        id=nuevo_id(), titulo="Respuesta a cliente insatisfecho por cobro",
-        remitente="Carmen Flores", fecha="24/06/2026", fechaCreacion="24/06/2026 09:45",
+        id=nuevo_id(), titulo="Respuesta a cliente por cobro indebido",
+        remitente="Carmen Flores", fecha=_fecha(1), fechaCreacion=_ts(1, "09:45"),
         area="Negocios", tipo="Email",
         contenido=(
-            "Estimado cliente, en respuesta a su reclamo por el cobro indebido registrado en su cuenta, "
-            "le informamos que hemos iniciado una investigación interna que tomará un plazo de 30 días "
-            "hábiles según normativa."
+            "Estimado cliente, en respuesta a su reclamo por el cobro indebido registrado en "
+            "su cuenta, le informamos que hemos iniciado una investigacion interna que tomara "
+            "un plazo de 30 dias habiles segun normativa vigente. Lamentamos los inconvenientes "
+            "ocasionados."
         ),
-        asesor={"nombre": "Rosa Medina", "telefono": "999 111 222"},
+        asesor={"nombre": "Walter Rios", "telefono": ""},
         estados=_estados(p1="ok", p2="obs"),
         feedbackPaso2={
             "fallos": [
-                "Lenguaje muy formal, sin personalización",
+                "Lenguaje muy formal y distante para un cliente que ya esta molesto",
+                "Sin nombre del cliente - impersonal",
                 "Sin nombre del asesor responsable del caso",
-                "No incluye canal de seguimiento del reclamo",
+                "No especifica proximos pasos concretos para el cliente",
+                "Plazo de 30 dias sin explicar que pasara en ese tiempo",
             ],
-            "principios": ["Personalización", "Datos del Asesor de Negocios", "Canales de atención claros"],
+            "principios": [
+                "Lenguaje simple y cercano",
+                "Personalizado con datos del cliente y asesor",
+                "Facil de actuar - que debe hacer el cliente",
+            ],
             "contenidoCorregido": (
-                "Hola {Nombre}, recibimos tu reclamo por el cobro del {fecha}. Ya iniciamos la "
-                "investigación — te avisaremos en un máximo de 30 días hábiles. Tu asesor {Asesor} "
-                "está disponible en el {telefono} para cualquier consulta."
+                "Hola {Nombre}, recibimos tu reclamo sobre el cobro en tu cuenta. Ya iniciamos "
+                "la revision y te avisaremos en 30 dias. Tu asesor {Asesor} te mantendra "
+                "informado. Gracias por tu paciencia."
             ),
         },
-        requiereRevisionHumana=True,
-        tipoRiesgo="reclamo",
+        requiereRevisionHumana=True, tipoRiesgo="reclamo",
+        historial=[
+            {"ts": _ts(1, "09:45"), "actor": "sistema", "accion": "Solicitud recibida (Paso 1)"},
+            {"ts": _ts(1, "09:47"), "actor": "Agente IA", "accion": "Observaciones en redaccion (Paso 2)"},
+            {"ts": _ts(1, "09:47"), "actor": "sistema", "accion": "Marcada para revision humana obligatoria por reclamo detectado"},
+        ],
     )
 
-    for s in [s1, s2, s3, s4, s5, s6, s7, s8]:
+    # SOL-009 — Pieza visual con observaciones de marca (hace 5 días)
+    s9 = _base(
+        id=nuevo_id(), titulo="Banner digital campana fin de anno",
+        remitente="Rosa Huanca", fecha=_fecha(5), fechaCreacion=_ts(5, "11:30"),
+        area="Digital", tipo="Pieza visual",
+        contenido="Cierra el anno con mas ahorros. Abre tu cuenta Mibanco hoy y gana premios.",
+        asesor={"nombre": "Fernando Leiva", "telefono": ""},
+        estados=_estados(p1="ok", p2="ok", p3="obs"),
+        feedbackPaso2={"fallos": [], "principios": [], "contenidoCorregido": ""},
+        imagenes=[{
+            "id": "img-seed-009",
+            "storageId": "img-seed-009",
+            "nombre": "banner_fin_anio.png",
+            "gcsPath": None,
+            "url": None,
+            "mime": "image/png",
+            "validada": True,
+            "ok": False,
+            "resultado": "Incumplimiento de Manual de Marca",
+            "detalle": "Verde #00CC44 no corresponde al institucional #00964B. Logo mal ubicado.",
+            "observaciones": [
+                "El verde usado en el banner es #00CC44 - no corresponde al verde oficial Mibanco #00964B",
+                "El logo aparece en la esquina inferior izquierda - segun manual debe ir en esquina inferior derecha",
+                "El texto principal supera el area de seguridad del banner",
+            ],
+            "sugerencias": [
+                "Corregir el verde a #00964B segun Manual de Marca v02",
+                "Reubicar el logo a esquina inferior derecha",
+                "Reducir el texto o ajustar al area de seguridad",
+            ],
+        }],
+        historial=[
+            {"ts": _ts(5, "11:30"), "actor": "sistema", "accion": "Solicitud recibida (Paso 1)"},
+            {"ts": _ts(5, "11:32"), "actor": "Agente IA", "accion": "Redaccion aprobada (Paso 2)"},
+            {"ts": _ts(5, "11:35"), "actor": "Agente IA", "accion": "Observaciones de marca en imagen (Paso 3)"},
+        ],
+    )
+
+    # SOL-010 — SMS aprobado y publicado (hace 30 días)
+    s10 = _base(
+        id=nuevo_id(), titulo="Confirmacion de desembolso de credito",
+        remitente="Pedro Soto", fecha=_fecha(30), fechaCreacion=_ts(30, "14:00"),
+        area="Digital", tipo="SMS",
+        contenido=(
+            "Hola {Nombre}, tu credito de S/{monto} fue desembolsado hoy. Revisa tu cuenta "
+            "en la app Mibanco. Cualquier duda llama a tu asesora {Asesor}."
+        ),
+        asesor={"nombre": "Nelly Condori", "telefono": ""},
+        estados=_estados(p1="ok", p2="ok", p3="ok", p4="ok", p5="ok"),
+        feedbackPaso2={"fallos": [], "principios": [], "contenidoCorregido": ""},
+        feedbackPaso4={"ok": True, "observaciones": [], "sugerencias": [], "contenidoCorregido": ""},
+        aprobadoCX=True, publicado=True,
+        historial=[
+            {"ts": _ts(30, "14:00"), "actor": "sistema", "accion": "Solicitud recibida (Paso 1)"},
+            {"ts": _ts(30, "14:02"), "actor": "Agente IA", "accion": "Redaccion aprobada (Paso 2)"},
+            {"ts": _ts(30, "14:03"), "actor": "Agente IA", "accion": "Sin imagenes, paso aprobado (Paso 3)"},
+            {"ts": _ts(30, "14:05"), "actor": "Agente IA", "accion": "Sin riesgos legales (Paso 4)"},
+            {"ts": _ts(30, "14:07"), "actor": "sistema", "accion": "Aprobacion automatica por IA (Paso 5)"},
+            {"ts": _ts(30, "14:30"), "actor": "sistema", "accion": "Comunicacion publicada"},
+        ],
+    )
+
+    # SOL-011 — Email revisión humana por comunicación de crisis (hace 4 días)
+    s11 = _base(
+        id=nuevo_id(), titulo="Comunicado por cierre temporal de agencias",
+        remitente="Gestion de Crisis", fecha=_fecha(4), fechaCreacion=_ts(4, "08:00"),
+        area="Negocios", tipo="Email",
+        contenido=(
+            "Estimados clientes, debido al fenomeno del nino que afecta la region norte del "
+            "pais, informamos que nuestras agencias de Piura, Tumbes y Sullana estaran cerradas "
+            "del 15 al 20 de junio. Pueden realizar sus operaciones por la app Mibanco o "
+            "llamando al 0800-00-900 sin costo."
+        ),
+        asesor={"nombre": "Equipo Mibanco", "telefono": ""},
+        estados=_estados(p1="ok", p2="obs"),
+        feedbackPaso2={
+            "fallos": [
+                "Lenguaje formal - en crisis el tono debe ser mas calido y empatico",
+                "Sin reconocimiento del impacto al cliente",
+                "No especifica que pasa con los pagos y cuotas durante el cierre",
+            ],
+            "principios": [
+                "Lenguaje simple y cercano - especialmente en crisis",
+                "Mensaje claro con alternativas concretas",
+            ],
+            "contenidoCorregido": (
+                "Hola {Nombre}, sabemos que el fenomeno del nino esta siendo dificil. Nuestras "
+                "agencias de Piura, Tumbes y Sullana cerraran del 15 al 20 de junio. Sigue "
+                "usando la app Mibanco o llamanos al 0800-00-900 gratis. Estamos contigo."
+            ),
+        },
+        requiereRevisionHumana=True, tipoRiesgo="crisis",
+        historial=[
+            {"ts": _ts(4, "08:00"), "actor": "sistema", "accion": "Solicitud recibida (Paso 1)"},
+            {"ts": _ts(4, "08:03"), "actor": "Agente IA", "accion": "Observaciones en redaccion (Paso 2)"},
+            {"ts": _ts(4, "08:03"), "actor": "sistema", "accion": "Marcada para revision humana obligatoria por comunicacion de crisis"},
+        ],
+    )
+
+    # SOL-012 — WhatsApp corrección aceptada, legal en proceso (hace 6 días)
+    s12 = _base(
+        id=nuevo_id(), titulo="Invitacion a taller de educacion financiera",
+        remitente="Ana Torres", fecha=_fecha(6), fechaCreacion=_ts(6, "10:00"),
+        area="Negocios", tipo="WhatsApp",
+        contenido=(
+            "Estimado empresario, le invitamos a participar en nuestro taller de educacion "
+            "financiera que se realizara el proximo sabado 22 de junio a las 10am en nuestra "
+            "agencia principal. Su asistencia es importante para su desarrollo empresarial."
+        ),
+        contenidoActual=(
+            "Hola {Nombre}, te invitamos a nuestro taller gratuito de finanzas el sabado "
+            "22 de junio a las 10am en tu agencia Mibanco. Aprende a hacer crecer tu negocio. "
+            "Confirma con tu asesora {Asesor}."
+        ),
+        asesor={"nombre": "Patricia Salas", "telefono": ""},
+        estados=_estados(p1="ok", p2="ok", p3="ok", p4="proc"),
+        feedbackPaso2={
+            "fallos": [
+                "Lenguaje formal - usar tu en vez de le",
+                "No menciona que el taller es gratuito",
+                "CTA poco claro - como confirma la asistencia",
+            ],
+            "principios": ["Lenguaje simple y cercano", "CTA claro"],
+            "contenidoCorregido": (
+                "Hola {Nombre}, te invitamos a nuestro taller gratuito de finanzas el sabado "
+                "22 de junio a las 10am en tu agencia Mibanco. Aprende a hacer crecer tu negocio. "
+                "Confirma con tu asesora {Asesor}."
+            ),
+        },
+        feedbackPaso3=[],
+        historial=[
+            {"ts": _ts(6, "10:00"), "actor": "sistema", "accion": "Solicitud recibida (Paso 1)"},
+            {"ts": _ts(6, "10:03"), "actor": "Agente IA", "accion": "Observaciones en redaccion (Paso 2)"},
+            {"ts": _ts(6, "10:15"), "actor": "Solicitante", "accion": "Acepto correccion de la IA (Paso 2)"},
+            {"ts": _ts(6, "10:17"), "actor": "Agente IA", "accion": "Redaccion aprobada tras correccion (Paso 2)"},
+            {"ts": _ts(6, "10:18"), "actor": "Agente IA", "accion": "Sin imagenes, paso aprobado (Paso 3)"},
+            {"ts": _ts(6, "10:20"), "actor": "Agente IA", "accion": "Validando cumplimiento legal... (Paso 4)"},
+        ],
+    )
+
+    for s in [s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12]:
         STORE[s["id"]] = s
     return STORE

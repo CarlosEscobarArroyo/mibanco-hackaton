@@ -622,7 +622,7 @@ function StepModal({ sol, step, vista, onClose, actions }) {
           lblAntes="Versión original" lblDespues="Versión corregida por IA" />
         {own2 && vista === 'sol' && (
           <div style={{ marginTop: 12 }}>
-            <label className="fld">Escribe tu propia versión:</label>
+            <label className="fld">Edita el contenido antes de revalidar:</label>
             <textarea value={txt2} onChange={ev => setTxt2(ev.target.value)} />
           </div>
         )}
@@ -660,8 +660,8 @@ function StepModal({ sol, step, vista, onClose, actions }) {
         footer={<button className="btn ghost" onClick={onClose}>Cerrar</button>}>
         <RoleTip>
           {vista === 'sol'
-            ? <><PenLine size={13} style={{ marginRight: 5 }} />Como SOLICITANTE: revisa cada imagen. Si hay observaciones, sube una nueva versión y el agente la validará.</>
-            : <><Eye size={13} style={{ marginRight: 5 }} />Vista CX: monitoreo. El reemplazo de imágenes lo hace el área solicitante.</>}
+            ? <><Eye size={13} style={{ marginRight: 5 }} />Solo lectura: el equipo CX gestiona la corrección de imágenes.</>
+            : <><PenLine size={13} style={{ marginRight: 5 }} />Vista CX: para cada imagen con observaciones, sube la versión corregida y el agente la revalidará automáticamente.</>}
         </RoleTip>
         <div className={'note' + (allOk ? ' ok' : ' bad')}>El agente comparó cada imagen contra las referencias de branding (logo, colores institucionales, proporciones).</div>
         <div className="img-row">
@@ -725,7 +725,7 @@ function StepModal({ sol, step, vista, onClose, actions }) {
           lblAntes="Versión actual" lblDespues="Versión ajustada (legal)" />
         {own4 && vista === 'sol' && (
           <div style={{ marginTop: 12 }}>
-            <label className="fld">Escribe tu propia versión:</label>
+            <label className="fld">Edita el contenido antes de revalidar:</label>
             <textarea value={txt4} onChange={ev => setTxt4(ev.target.value)} />
           </div>
         )}
