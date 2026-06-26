@@ -18,7 +18,7 @@ import service
 import storage
 from store import STORE, seed, paso_actual
 
-app = FastAPI(title="Mibanco · Validación de Comunicaciones", version="1.0.0")
+app = FastAPI(title="Garra IA · Validación de Comunicaciones", version="1.0.0")
 
 app.add_middleware(
     CORSMiddleware,

@@ -171,9 +171,9 @@ function tiempoEspera(sol) {
 function motivoRevision(tipoRiesgo) {
   const t = (tipoRiesgo || '').toLowerCase()
   if (t.includes('oferta')) return 'Contiene oferta comercial'
-  if (t.includes('reclamo')) return 'Contiene informacion de reclamo'
-  if (t.includes('crisis')) return 'Comunicacion de crisis detectada'
-  return 'Requiere revision por el equipo CX'
+  if (t.includes('reclamo')) return 'Contiene información de reclamo'
+  if (t.includes('crisis')) return 'Comunicación de crisis detectada'
+  return 'Requiere revisión por el equipo CX'
 }
 
 export default function App() {
@@ -371,7 +371,7 @@ export default function App() {
 
         <div className="grid">
           <div className="card">
-            <h3>{vista === 'cx' ? 'Solicitudes de todas las áreas' : 'Mis solicitudes - Area Productos'}<span className="count">{displayLista.length}</span></h3>
+            <h3>{vista === 'cx' ? 'Solicitudes de todas las áreas' : 'Mis solicitudes - Área Productos'}<span className="count">{displayLista.length}</span></h3>
             {displayLista.length === 0
               ? <div className="empty"><FileSearch size={46} style={{ opacity: .4 }} /><span>{activeFilter ? 'No hay solicitudes con ese filtro.' : 'No hay solicitudes.'}</span></div>
               : displayLista.map(r => {
@@ -446,13 +446,13 @@ function Detalle({ sol, vista, onOpenStep, pending }) {
       {sol.requiereRevisionHumana && vista === 'cx' && (
         <div className="riesgo-banner">
           <span className="ic" aria-hidden="true"><AlertTriangle size={18} /></span>
-          <span><b>Requiere revision humana obligatoria</b> - Clasificada como "{sol.tipoRiesgo}". No se auto-aprueba en los pasos de IA.</span>
+          <span><b>Requiere revisión humana obligatoria</b> - Clasificada como "{sol.tipoRiesgo}". No se auto-aprueba en los pasos de IA.</span>
         </div>
       )}
       {sol.requiereRevisionHumana && vista === 'sol' && (
         <div className="rev-humana-banner-sol">
           <span aria-hidden="true"><AlertCircle size={18} /></span>
-          <span><b>Esta solicitud requiere revision del equipo CX</b> - {motivoRevision(sol.tipoRiesgo)}. La validacion automatica esta completa, pero el equipo CX debe revisarla antes de aprobarla.</span>
+          <span><b>Esta solicitud requiere revisión del equipo CX</b> - {motivoRevision(sol.tipoRiesgo)}. La validación automática está completa, pero el equipo CX debe revisarla antes de aprobarla.</span>
         </div>
       )}
 
@@ -754,7 +754,7 @@ function StepModal({ sol, step, vista, onClose, actions }) {
       </>
     )
     if (vista === 'cx') {
-      if (sol.aprobadoCX) return <Modal title="Paso 5 - Brief + Aprobacion CX" chip={chip} onClose={onClose} footer={<button className="btn ghost" onClick={onClose}>Cerrar</button>}>{brief}<div className="note ok">Solicitud aprobada por CX.</div></Modal>
+      if (sol.aprobadoCX) return <Modal title="Paso 5 - Brief + Aprobación CX" chip={chip} onClose={onClose} footer={<button className="btn ghost" onClick={onClose}>Cerrar</button>}>{brief}<div className="note ok">Solicitud aprobada por CX.</div></Modal>
       if (sol.estados?.paso5 === 'obs' && sol.mensajeRechazo) return (
         <Modal title="Paso 5 - Rechazado por CX" chip={chip} onClose={onClose} footer={<button className="btn ghost" onClick={onClose}>Cerrar</button>}>
           <div className="note bad"><b>Esta solicitud fue rechazada por CX</b><br />{sol.mensajeRechazo}</div>
@@ -762,7 +762,7 @@ function StepModal({ sol, step, vista, onClose, actions }) {
         </Modal>
       )
       return (
-        <Modal title="Paso 5 - Brief + Aprobacion CX" chip={chip} onClose={onClose}
+        <Modal title="Paso 5 - Brief + Aprobación CX" chip={chip} onClose={onClose}
           footer={rejectMode ? <>
             <button className="btn ghost" onClick={() => { setRejectMode(false); setConsejo('') }}>Cancelar</button>
             <button className="btn warn" disabled={!rejectMsg.trim()} onClick={() => { actions.onRechazar(sol.id, rejectMsg); onClose() }}>Confirmar rechazo</button>
@@ -771,12 +771,12 @@ function StepModal({ sol, step, vista, onClose, actions }) {
             <button className="btn warn" onClick={() => setRejectMode(true)}>Rechazar con observaciones</button>
             <button className="btn primary" onClick={() => actions.onAprobar(sol.id)}>Aprobar solicitud</button>
           </>}>
-          <RoleTip><Eye size={13} style={{ marginRight: 5 }} />Vista CX: aqui es donde realmente intervienes. Revisa el brief y da el visto bueno final.</RoleTip>
+          <RoleTip><Eye size={13} style={{ marginRight: 5 }} />Vista CX: aquí es donde realmente intervienes. Revisa el brief y da el visto bueno final.</RoleTip>
           {rejectMode ? (
             <div className="rechazo-panel">
-              <div className="note bad" style={{ marginBottom: 10 }}><b>Redacta el motivo del rechazo</b> - el solicitante lo vera en su bandeja.</div>
+              <div className="note bad" style={{ marginBottom: 10 }}><b>Redacta el motivo del rechazo</b> - el solicitante lo verá en su bandeja.</div>
               <textarea value={rejectMsg} onChange={e => setRejectMsg(e.target.value)}
-                placeholder="Describe por que se rechaza esta solicitud y que debe corregirse..." style={{ minHeight: 80 }} />
+                placeholder="Describe por qué se rechaza esta solicitud y qué debe corregirse..." style={{ minHeight: 80 }} />
               {!consejo && <button className="btn ghost" style={{ marginTop: 8, fontSize: 12 }} onClick={handleGenerarConsejo} disabled={loadingConsejo}>
                 {loadingConsejo ? 'Generando...' : 'Generar sugerencia con IA'}
               </button>}
@@ -1242,11 +1242,11 @@ function NuevaModal({ onClose, onCrear, onImportar }) {
   function submit() {
     const msgFile = adjuntos.find(f => f.name.toLowerCase().endsWith('.msg'))
     if (msgFile) { onImportar(msgFile, AREA); return }
-    if (!contenido.trim()) { alert('Escribe el contenido de la comunicacion.'); return }
+    if (!contenido.trim()) { alert('Escribe el contenido de la comunicación.'); return }
     if (tipo === 'Otro' && !tipoCustom.trim()) { alert('Especifica el tipo de pieza.'); return }
     const tipoFinal = tipo === 'Otro' ? tipoCustom.trim() : tipo
     const fd = new FormData()
-    fd.append('titulo', titulo || `Comunicacion ${tipoFinal}`)
+    fd.append('titulo', titulo || `Comunicación ${tipoFinal}`)
     fd.append('remitente', NOMBRE)
     fd.append('area', AREA)
     fd.append('tipo', tipoFinal)
@@ -1260,14 +1260,14 @@ function NuevaModal({ onClose, onCrear, onImportar }) {
   const hasMsgFile = adjuntos.some(f => f.name.toLowerCase().endsWith('.msg'))
 
   return (
-    <Modal title="Nueva solicitud de comunicacion" onClose={onClose}
+    <Modal title="Nueva solicitud de comunicación" onClose={onClose}
       footer={<>
         <button className="btn ghost" onClick={onClose}>Cancelar</button>
         <button className="btn primary" onClick={submit}>{hasMsgFile ? 'Importar y validar con IA' : 'Enviar y validar con IA'}</button>
       </>}>
 
       <div className="identity-strip">
-        Solicitando como: <b>{NOMBRE}</b> - Area <b>{AREA}</b>
+        Solicitando como: <b>{NOMBRE}</b> - Área <b>{AREA}</b>
       </div>
 
       <label className="fld">Tipo de pieza</label>
@@ -1275,25 +1275,25 @@ function NuevaModal({ onClose, onCrear, onImportar }) {
       {tipo === 'Otro' && (
         <>
           <label className="fld">Especifica el tipo de pieza</label>
-          <input type="text" value={tipoCustom} onChange={e => setTipoCustom(e.target.value)} placeholder="Describe el tipo de comunicacion..." />
+          <input type="text" value={tipoCustom} onChange={e => setTipoCustom(e.target.value)} placeholder="Describe el tipo de comunicación..." />
         </>
       )}
       <label className="fld">Titulo</label>
-      <input type="text" value={titulo} onChange={e => setTitulo(e.target.value)} placeholder={`Comunicacion ${tipo === 'Otro' ? (tipoCustom || 'personalizado') : tipo}`} />
+      <input type="text" value={titulo} onChange={e => setTitulo(e.target.value)} placeholder={`Comunicación ${tipo === 'Otro' ? (tipoCustom || 'personalizado') : tipo}`} />
       <label className="fld">Contenido del mensaje</label>
       <textarea value={contenido} onChange={e => setContenido(e.target.value)} placeholder="Escribe el mensaje a validar..." style={{ minHeight: 110 }} />
       <label className="fld">Asesor (nombre)</label>
       <input type="text" value={asesorNombre} onChange={e => setAsesorNombre(e.target.value)} placeholder="Luis Perez" />
-      <label className="fld">Archivos adjuntos <span style={{ fontWeight: 600, color: 'var(--gray-d)' }}>(imagenes para validacion de marca)</span></label>
+      <label className="fld">Archivos adjuntos <span style={{ fontWeight: 600, color: 'var(--gray-d)' }}>(imágenes para validación de marca)</span></label>
       <label className="adj-drop">
         <input type="file" accept=".msg,.pdf,.docx,.png,.jpg,.jpeg,.gif,image/*" multiple style={{ display: 'none' }}
           onChange={e => setAdjuntos(Array.from(e.target.files))} />
         <div className="adj-file-row">
           <Upload size={14} />
-          <span>{adjuntos.length > 0 ? adjNombres : 'Seleccionar archivos (.msg, PDF, DOCX, imagenes)'}</span>
+          <span>{adjuntos.length > 0 ? adjNombres : 'Seleccionar archivos (.msg, PDF, DOCX, imágenes)'}</span>
         </div>
       </label>
-      {hasMsgFile && <div style={{ fontSize: 11, color: 'var(--gray-d)', marginTop: 4 }}>Se extraera asunto, remitente, cuerpo e imagenes del correo .msg.</div>}
+      {hasMsgFile && <div style={{ fontSize: 11, color: 'var(--gray-d)', marginTop: 4 }}>Se extraerá asunto, remitente, cuerpo e imágenes del correo .msg.</div>}
     </Modal>
   )
 }
@@ -1422,7 +1422,7 @@ function Dashboard({ lista, cfg, onRefresh, onVerCX }) {
     .sort((a, b) => parseTs(a.fechaCreacion) - parseTs(b.fechaCreacion))
 
   if (total === 0) return (
-    <div className="empty"><FileSearch size={46} style={{ opacity: .4 }} /><span>Aun no hay solicitudes para graficar. Crea una desde la Vista Solicitante.</span></div>
+    <div className="empty"><FileSearch size={46} style={{ opacity: .4 }} /><span>Aún no hay solicitudes para graficar. Crea una desde la Vista Solicitante.</span></div>
   )
 
   return (
@@ -1430,11 +1430,11 @@ function Dashboard({ lista, cfg, onRefresh, onVerCX }) {
       <div className="dash-head">
         <div>
           <h2>Dashboard de avance</h2>
-          <p>Metricas en vivo del flujo de validacion - {total} solicitud{total === 1 ? '' : 'es'} de todas las areas</p>
+          <p>Métricas en vivo del flujo de validación - {total} solicitud{total === 1 ? '' : 'es'} de todas las áreas</p>
         </div>
         <div className="dash-head-right">
           {cfg && <span className="envtag dark"><span className="live"></span>{cfg.modelo?.model}</span>}
-          <button className="btn ghost dash-refresh" onClick={onRefresh} title="Actualizar metricas">Actualizar</button>
+          <button className="btn ghost dash-refresh" onClick={onRefresh} title="Actualizar métricas">Actualizar</button>
         </div>
       </div>
 
@@ -1478,18 +1478,18 @@ function Dashboard({ lista, cfg, onRefresh, onVerCX }) {
         </div>
         <div className="dk">
           <div className="dk-ic" style={{ background: '#FEE8E8', color: '#E63946' }}><AlertTriangle size={22} /></div>
-          <div className="dk-body"><div className="dk-big">{pendientes}</div><div className="dk-lbl">Requieren accion</div><div className="dk-sub">{macro.obs} observadas - {macro.wait} esperando CX</div></div>
+          <div className="dk-body"><div className="dk-big">{pendientes}</div><div className="dk-lbl">Requieren acción</div><div className="dk-sub">{macro.obs} observadas - {macro.wait} esperando CX</div></div>
         </div>
         <div className="dk">
           <div className="dk-ic" style={{ background: '#EAF0FB', color: '#2563EB' }}><UserCheck size={22} /></div>
-          <div className="dk-body"><div className="dk-big">{revHumana}</div><div className="dk-lbl">Revision humana</div><div className="dk-sub">clasificadas como riesgo</div></div>
+          <div className="dk-body"><div className="dk-big">{revHumana}</div><div className="dk-lbl">Revisión humana</div><div className="dk-sub">clasificadas como riesgo</div></div>
         </div>
       </div>
 
       {/* Fila 3: Dona + Avance por etapa */}
       <div className="dash-grid">
         <div className="panel">
-          <div className="panel-h"><h3>Estado del pipeline</h3><span className="panel-s">distribucion de solicitudes</span></div>
+          <div className="panel-h"><h3>Estado del pipeline</h3><span className="panel-s">distribución de solicitudes</span></div>
           <div className="donut-row">
             <Donut segments={segEstado} centerTop={total} centerBottom="solicitudes" />
             <div className="donut-legend">
@@ -1528,11 +1528,11 @@ function Dashboard({ lista, cfg, onRefresh, onVerCX }) {
       {/* Fila 4: Tabla de atencion ordenada por antiguedad */}
       <div className="panel attn">
         <div className="panel-h">
-          <h3>Requieren atencion</h3>
+          <h3>Requieren atención</h3>
           <span className="panel-s">{atencion.length} solicitud{atencion.length === 1 ? '' : 'es'} - ordenadas por tiempo de espera</span>
         </div>
         {atencion.length === 0 ? (
-          <div className="attn-empty">Todo al dia: ninguna solicitud pendiente de accion.</div>
+          <div className="attn-empty">Todo al día: ninguna solicitud pendiente de acción.</div>
         ) : (
           <div className="attn-list">
             {atencion.map(r => {
@@ -1545,7 +1545,7 @@ function Dashboard({ lista, cfg, onRefresh, onVerCX }) {
                   <span className="attn-dot" style={{ background: meta?.color }} />
                   <div className="attn-meta">
                     <div className="attn-ttl">{r.titulo}</div>
-                    <div className="attn-sub">{r.id} - {r.area} - {r.tipo}{r.requiereRevisionHumana ? ' - revision humana' : ''}{espera ? ` - ${espera.txt}` : ''}</div>
+                    <div className="attn-sub">{r.id} - {r.area} - {r.tipo}{r.requiereRevisionHumana ? ' - revisión humana' : ''}{espera ? ` - ${espera.txt}` : ''}</div>
                   </div>
                   <div className="attn-prog"><div className="attn-prog-track"><div className="attn-prog-fill" style={{ width: (done / 5 * 100) + '%' }} /></div><span>{done}/5</span></div>
                   <span className="attn-badge" style={{ background: meta?.color }}>{meta?.lbl}</span>
