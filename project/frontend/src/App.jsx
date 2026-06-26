@@ -91,12 +91,11 @@ function MibancoLogo({ dark = false }) {
 function LoadingModal({ message }) {
   const [activeStep, setActiveStep] = useState(1)
   useEffect(() => {
-    let step = 1
+    // Barrido rápido y en bucle: es una animación DECORATIVA del flujo (solo para ver),
+    // no el progreso real de la operación. Por eso recorre los 5 pasos y vuelve a empezar.
     const timer = setInterval(() => {
-      step++
-      if (step > 5) { clearInterval(timer); return }
-      setActiveStep(step)
-    }, 2400)
+      setActiveStep(s => (s >= 5 ? 1 : s + 1))
+    }, 500)
     return () => clearInterval(timer)
   }, [])
   return (
