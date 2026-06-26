@@ -40,6 +40,25 @@ def client():
     return _client
 
 
+def _gen(contents, config, tries: int = 4):
+    """Llama al modelo con reintentos y backoff ante errores transitorios (429/503/500),
+    para que un pico de cuota de Vertex no marque por error una pieza como incumplimiento."""
+    import time
+    last = None
+    for i in range(tries):
+        try:
+            return client().models.generate_content(model=MODEL, contents=contents, config=config)
+        except Exception as e:
+            last = e
+            m = str(e)
+            transitorio = any(s in m for s in (
+                "429", "RESOURCE_EXHAUSTED", "503", "UNAVAILABLE", "500", "INTERNAL"))
+            if not transitorio or i == tries - 1:
+                raise
+            time.sleep(1.5 * (2 ** i))
+    raise last
+
+
 def _config(system_instruction: str, json_mode: bool = True, temperature: float = 0.2):
     from google.genai import types
     kwargs = dict(system_instruction=system_instruction, temperature=temperature)
@@ -150,7 +169,7 @@ def clasificar(tipo: str, contenido: str) -> dict:
     prompt = f"Tipo de pieza/canal: {tipo}\nContenido:\n{contenido}"
     default = {"tipo_riesgo": "normal", "requiere_revision_humana": False, "motivo": ""}
     try:
-        resp = client().models.generate_content(model=MODEL, contents=prompt, config=_config(sys, temperature=0))
+        resp = _gen(prompt, _config(sys, temperature=0))
         out = _parse_json(resp.text, default)
         out.setdefault("tipo_riesgo", "normal")
         out["requiere_revision_humana"] = bool(out.get("requiere_revision_humana")) or out.get("tipo_riesgo") in (
@@ -207,7 +226,7 @@ def validar_redaccion(tipo: str, contenido: str, asesor: dict) -> dict:
     prompt = f"Canal: {tipo}\nDatos del Asesor de Negocios: {asesor_txt}\nMensaje a evaluar:\n{contenido}"
     default = {"cumple": True, "nivel": "aprobado", "accion": "aprobar", "fallos": [], "principios_afectados": [], "contenido_corregido": contenido}
     try:
-        resp = client().models.generate_content(model=MODEL, contents=prompt, config=_config(sys))
+        resp = _gen(prompt, _config(sys))
         out = _parse_json(resp.text, default)
         out.setdefault("fallos", [])
         out.setdefault("principios_afectados", [])
@@ -251,14 +270,16 @@ def validar_imagen(img_bytes: bytes, mime_type: str, nombre: str) -> dict:
             types.Part.from_bytes(data=img_bytes, mime_type=mime_type or "image/png"),
             f"Nombre del archivo: {nombre}. Evalúa si esta imagen cumple el branding de Mibanco.",
         ]
-        resp = client().models.generate_content(model=MODEL, contents=contents, config=_config(sys))
+        resp = _gen(contents, _config(sys))
         out = _parse_json(resp.text, default)
         out.setdefault("cumple", True)
         out.setdefault("observaciones", [])
         out.setdefault("sugerencias", [])
         return out
     except Exception as e:
-        return {**default, "cumple": False, "observaciones": [f"No se pudo validar la imagen con IA: {e}"], "error": str(e)}
+        # Un error de infraestructura (cuota/red) NO es un problema de marca: no rechazamos la pieza.
+        return {**default, "cumple": True, "observaciones": [], "sugerencias": [],
+                "advertencia": f"No se pudo validar la imagen con IA (no es un problema de marca): {e}", "error": str(e)}
 
 
 # ---------------------------------------------------------------------------
@@ -292,7 +313,7 @@ def validar_legal(contenido: str, tipo: str = "") -> dict:
     prompt = f"Canal: {tipo}\nMensaje a revisar:\n{contenido}"
     default = {"cumple": True, "nivel": "aprobado", "accion": "aprobar", "observaciones": [], "sugerencias": [], "normas": [], "contenido_corregido": contenido}
     try:
-        resp = client().models.generate_content(model=MODEL, contents=prompt, config=_config(sys))
+        resp = _gen(prompt, _config(sys))
         out = _parse_json(resp.text, default)
         out.setdefault("observaciones", [])
         out.setdefault("sugerencias", [])
@@ -337,7 +358,7 @@ def generar_brief(sol: dict) -> str:
     }
     prompt = "Datos de la solicitud (JSON):\n" + json.dumps(resumen, ensure_ascii=False, indent=2)
     try:
-        resp = client().models.generate_content(model=MODEL, contents=prompt, config=_config(sys, json_mode=False, temperature=0.3))
+        resp = _gen(prompt, _config(sys, json_mode=False, temperature=0.3))
         return (resp.text or "").strip()
     except Exception as e:
         return (
@@ -369,7 +390,7 @@ def generar_consejo_rechazo(sol: dict) -> str:
     import json
     prompt = "Datos de la solicitud:\n" + json.dumps(datos, ensure_ascii=False, indent=2)
     try:
-        resp = client().models.generate_content(model=MODEL, contents=prompt, config=_config(sys, json_mode=False, temperature=0.4))
+        resp = _gen(prompt, _config(sys, json_mode=False, temperature=0.4))
         return (resp.text or "").strip()
     except Exception as e:
         return (
